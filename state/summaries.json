@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0.0",
+  "generator": "PortalSummaryEngine",
+  "generatedAt": "2026-11-15T23:36:00.000Z",
+  "sensitiveIncluded": false,
+  "note": "Initial static summary baseline; click 'Summary JSON' inside Portal to regenerate live from workspace files.",
+  "pillars": [
+    {
+      "id": "luno",
+      "name": "Luno Workspace",
+      "url": "../Luno/index.html",
+      "summary": "Phone-first dual-mode AI development cockpit with HTML Container AST patching and 1-tap GitHub Pages deployment."
+    },
+    {
+      "id": "homesetup",
+      "name": "Home Setup & Fleet",
+      "url": "../HomeSetup/index.html",
+      "summary": "Multi-node Port 8080 federation (Mac Mini & Ubuntu), zero-leak secret boundaries, and universal speech dictation."
+    },
+    {
+      "id": "career",
+      "name": "Career & CAD Inventions",
+      "url": "../CadPlan/index.html",
+      "summary": "AccuDraw & SmartLine (US Patent #5,754,182) plus modern 3D WebGL CAD workstations."
+    },
+    {
+      "id": "financial",
+      "name": "Financial & Valuation Record",
+      "url": "../ValuationOfAccudraw/index.html",
+      "summary": "$1.2B-$5.54B+ ($2.3B midpoint) counterfactual enterprise value attribution contrasted with personal financial reality."
+    },
+    {
+      "id": "family",
+      "name": "Family, Stability & Legal Context",
+      "url": "../situation/index.html",
+      "summary": "Stabilized Nov 2026 living status, non-caregiver clarification, daughter court documentation, and gated deeper POA context."
+    },
+    {
+      "id": "economics",
+      "name": "Post-Labor Economics & Opus",
+      "url": "../EconomicsOfAutomation/index.html",
+      "summary": "The Robot Dividend, Colony of 100,000, JobsAndAI empirical thesis, and the 4-Quadrant Opus router."
+    }
+  ]
+}

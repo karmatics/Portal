@@ -1,0 +1,56 @@
+{
+  "name": "Portal",
+  "version": "1.0.0",
+  "description": "Public Front Page, Live Summary JSON Engine & Cross-Linked Living Archive for Rob Brown's Projects (Luno, HomeSetup, Career, Financial, Family & Economics)",
+  "type": "luno-web-app",
+  "mainClass": "Portal",
+  "entrypoint": {
+    "file": "Portal.js",
+    "class": "Portal",
+    "method": "run"
+  },
+  "main": [
+    "js/PortalData.js",
+    "js/PortalSummaryEngine.js",
+    "js/PortalDocContent.js",
+    "js/PortalModals.js",
+    "Portal.js"
+  ],
+  "library": [
+    "DomBasics.js",
+    "UITools.js",
+    "GlowingTooltip.js",
+    "DictationWidget.js",
+    "SidePanel.js",
+    "SupabaseCommentsAdapter.js",
+    "CadPlanDataRegistry.js",
+    "CadPlanItemNotes.js",
+    "CadPlanDocumentEditor.js",
+    "CadPlanAardvark.js",
+    "SensitiveContextGate.js",
+    "DocumentReader.js"
+  ],
+  "styles": [
+    "portal.css"
+  ],
+  "visibilitySets": {
+    "frontpage-core": [
+      "Portal/Portal.js",
+      "Portal/js/PortalData.js",
+      "Portal/js/PortalModals.js",
+      "Portal/portal.css",
+      "Portal/luno.json"
+    ],
+    "summary-engine": [
+      "Portal/js/PortalSummaryEngine.js",
+      "Portal/js/PortalData.js",
+      "Portal/state/summaries.json"
+    ],
+    "doc-integration": [
+      "Portal/js/PortalDocContent.js",
+      "Portal/Portal.js",
+      "Library/DocumentReader.js",
+      "Library/SensitiveContextGate.js"
+    ]
+  }
+}

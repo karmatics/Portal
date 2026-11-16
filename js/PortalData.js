@@ -6,20 +6,19 @@ class PortalData {
         {
           id: 'curve_drawing_spear',
           category: 'spear',
-          name: 'Freeform Curve Drawing Studio',
+          name: 'Kinetic Curve & Image Markup Studio',
           icon: '〰️',
           accent: '#00f2fe',
-          badge: 'TIP OF THE SPEAR • NEW INITIATIVE',
-          subtitle: 'Controllable Web Curves in the Lightweight Spirit of Aardvark',
+          badge: 'TIP OF THE SPEAR • FREE WEB APP',
+          subtitle: 'A Modern Pen Tool Replacement Built for Instant Web Markup (QuoraToys)',
           url: u('QuoraToys'),
           docPageId: 'spear_drawing',
-          publicSummary: 'A brand-new, web-first drawing initiative focused on smooth, deeply controllable freeform curves that feel effortless right inside any browser page—continuing the lightweight, approachable spirit of Aardvark (Rob’s widely known Firefox extension) rather than requiring heavy desktop CAD software.',
-          calmNote: 'Separate from 3D AccuDraw: built for expressive, immediate web drawing, illustration, and annotation.',
-          facts: ['Freeform Curve Control', 'Aardvark-Inspired UX', 'Instant Web Embed', 'DrawingApp & Overlay'],
-          targetFiles: ['QuoraToys/luno.json', 'DrawingApp/luno.json', 'Library/GlowingTooltip.js'],
+          publicSummary: 'A ground-up replacement for the 1980s Adobe Illustrator Pen tool wrapped inside an effortless web app: drag or Ctrl+V paste any image, draw smooth curves with 32px kinetic string-tether dampening and direct rubber-wire bending, add concave arrows, highlight loops, and crisp text callouts, and copy the finished graphic straight to your clipboard for Quora or social media.',
+          calmNote: 'Broad everyday appeal in the lightweight spirit of Aardvark (Rob’s classic Firefox extension)—given away free as a natural entry point to Luno and the rest of this living document system.',
+          facts: ['Pen Tool Replacement', 'Ctrl+V Paste & Copy Out', '32px Kinetic Tether', 'Aardvark-Like Reach'],
+          targetFiles: ['QuoraToys/luno.json', 'QuoraToys/js/QuoraToys.js', 'QuoraToys/js/QuoraAnnotationComponent.js', 'QuoraToys/js/QuoraToysContent.js'],
           extraLinks: [
-            { label: 'Open Curve Studio', url: u('QuoraToys') },
-            { label: 'DrawingApp', url: u('DrawingApp') }
+            { label: 'Launch Curve & Markup App', url: u('QuoraToys') }
           ],
           crossLinks: [
             { label: 'AccuCAD 3D Workstation', targetId: 'accucad_live' },
@@ -45,7 +44,7 @@ class PortalData {
             { label: 'Jobs & AI Horizon', url: u('JobsAndAI') }
           ],
           crossLinks: [
-            { label: 'Freeform Curve Drawing Studio', targetId: 'curve_drawing_spear' },
+            { label: 'Kinetic Curve & Markup Studio', targetId: 'curve_drawing_spear' },
             { label: 'Luno Workspace', targetId: 'luno' }
           ]
         },
@@ -60,7 +59,7 @@ class PortalData {
           url: u('accuCad'),
           docPageId: 'spear_accucad',
           publicSummary: 'If you want to see a full 3D engineering application running live in the browser, open AccuCAD—a Three.js drafting studio demonstrating precision 3D orientation locks, tentative snapping, direction-cosine axes, and wireless mobile pairing.',
-          calmNote: 'Shows the precision 3D CAD craft behind AccuDraw running smoothly with zero installation.',
+          calmNote: 'Given away openly as web CAD technology; tailored for CAD/3D engineers while the Curve & Markup Studio targets a broader everyday audience.',
           facts: ['Live 3D WebGL Viewport', 'AccuDrawLogic Engine', 'Tentative Snapping', 'TouchController P2P'],
           targetFiles: ['accuCad/luno.json', 'CadPlan/luno.json', 'TouchController/luno.json'],
           extraLinks: [
@@ -69,8 +68,8 @@ class PortalData {
             { label: 'TouchController', url: u('TouchController') }
           ],
           crossLinks: [
-            { label: 'AccuDraw Patent Record', targetId: 'career' },
-            { label: 'Freeform Curve Drawing Studio', targetId: 'curve_drawing_spear' }
+            { label: 'AccuDraw & Aardvark Heritage', targetId: 'career' },
+            { label: 'Kinetic Curve & Markup Studio', targetId: 'curve_drawing_spear' }
           ]
         },
         {
@@ -83,7 +82,7 @@ class PortalData {
           subtitle: 'US Patent #5,754,182, SmartLine & 30-Year Engineering Archive',
           url: u('accudraw'),
           docPageId: 'career',
-          publicSummary: 'Documents Rob Brown’s foundational CAD inventions at Bentley Systems (1994–1997)—AccuDraw, SmartLine, and PowerSelector, earning US Patent #5,754,182—alongside original 1995–1996 MicroStation Manager reprints and his history creating viral web utilities like Aardvark.',
+          publicSummary: 'Documents Rob Brown’s foundational CAD inventions at Bentley Systems (1994–1997)—AccuDraw, SmartLine, and PowerSelector, earning US Patent #5,754,182—alongside original 1995–1996 MicroStation Manager reprints and his history creating widely shared web tools like Aardvark.',
           calmNote: 'Primary patent filings, historical reprints, and open spatial constraint documentation.',
           facts: ['US Patent #5,754,182', 'AccuDraw & SmartLine', '48/50 State DOT Standard', 'Aardvark Legacy'],
           targetFiles: ['accudraw/luno.json', 'CadPlan/luno.json'],
@@ -112,7 +111,7 @@ class PortalData {
           targetFiles: ['Luno/luno.json', 'Luno/app/ClientApp.js', 'Luno/core/LunoClassPatcher.js', 'Luno/core/LunoServer.js'],
           crossLinks: [
             { label: 'Home Setup & Fleet', targetId: 'homesetup' },
-            { label: 'Freeform Curve Drawing Studio', targetId: 'curve_drawing_spear' }
+            { label: 'Kinetic Curve & Markup Studio', targetId: 'curve_drawing_spear' }
           ]
         },
         {
@@ -154,7 +153,7 @@ class PortalData {
           ],
           crossLinks: [
             { label: 'AccuDraw & Aardvark Heritage', targetId: 'career' },
-            { label: 'Family, Stability & Context', targetId: 'family' }
+            { label: 'Family, Stability & Personal Context', targetId: 'family' }
           ]
         },
         {
@@ -206,11 +205,12 @@ class PortalData {
         }
       ];
     }
+
   static getScanManifestTargets() {
       return [
         { project: 'Portal', file: 'Portal/luno.json', kind: 'manifest' },
+        { project: 'QuoraToys', file: 'QuoraToys/luno.json', kind: 'manifest' },
         { project: 'accuCad', file: 'accuCad/luno.json', kind: 'manifest' },
-        { project: 'DrawingApp', file: 'DrawingApp/luno.json', kind: 'manifest' },
         { project: 'CadPlan', file: 'CadPlan/luno.json', kind: 'manifest' },
         { project: 'accudraw', file: 'accudraw/luno.json', kind: 'manifest' },
         { project: 'EconomicsOfAutomation', file: 'EconomicsOfAutomation/luno.json', kind: 'manifest' },
@@ -222,7 +222,6 @@ class PortalData {
         { project: 'Opus', file: 'Opus/js/OpusSummaries.js', kind: 'summaries' },
         { project: 'situation', file: 'situation/luno.json', kind: 'manifest' },
         { project: 'ValuationOfAccudraw', file: 'ValuationOfAccudraw/luno.json', kind: 'manifest' },
-        { project: 'QuoraToys', file: 'QuoraToys/luno.json', kind: 'manifest' },
         { project: 'TouchController', file: 'TouchController/luno.json', kind: 'manifest' },
         { project: 'Library', file: 'Library/luno.json', kind: 'manifest' }
       ];

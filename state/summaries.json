@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.0.0",
   "generator": "PortalSummaryEngine",
-  "generatedAt": "2026-11-15T23:58:00.000Z",
+  "generatedAt": "2026-11-16T01:10:00.000Z",
   "sensitiveIncluded": false,
   "note": "Initial static summary baseline; click 'Summary JSON' inside Portal to regenerate live from workspace files.",
   "pillars": [
     {
       "id": "curve_drawing_spear",
-      "name": "Freeform Curve Drawing Studio",
+      "name": "Kinetic Curve & Image Markup Studio",
       "url": "../QuoraToys/index.html",
-      "summary": "Web-first drawing initiative focused on smooth, controllable freeform curves in the lightweight spirit of Aardvark."
+      "summary": "Modern web replacement for the 1980s Illustrator Pen tool with 32px kinetic tether, Ctrl+V image paste, clipboard export, and Aardvark-like broad appeal."
     },
     {
       "id": "economics_spear",

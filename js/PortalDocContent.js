@@ -3,9 +3,9 @@ class PortalDocContent {
   static getMeta(pageId = null) {
       const metas = {
         spear_drawing: {
-          kicker: 'Chapter 1 • Tip of the Spear (New Initiative)',
-          title: '1. Freeform Curve Drawing Studio & Aardvark Spirit',
-          subtitle: 'Beautiful, controllable web-first curves—lightweight and immediate, separate from 3D CAD.'
+          kicker: 'Chapter 1 • Tip of the Spear (Free Web App)',
+          title: '1. Kinetic Curve & Image Markup Studio (QuoraToys)',
+          subtitle: 'A modern, intuitive replacement for the 1980s Illustrator Pen tool—paste images, draw clean curves & arrows, and copy straight to clipboard.'
         },
         spear_economics: {
           kicker: 'Chapter 2 • Tip of the Spear (Public Reading)',
@@ -59,7 +59,6 @@ class PortalDocContent {
         subtitle: 'A unified, cross-referenced guide to live apps, engineering records, personal stability, and economic research.'
       };
     }
-
   static manifest() {
       return [
         {
@@ -155,15 +154,15 @@ class PortalDocContent {
         "AI collaborators return surgical `<script data-file=\"...\" data-method=\"...\" data-action=\"patch\">` containers. Luno validates and splices those methods using an in-browser Acorn AST engine, maintains local snapshots, and deploys static sites to GitHub Pages in one tap."
       ];
     }
-  static sidebar_doc_luno() {
-    return [
-      "Luno Cross-References:\n" +
-      "• Primary Workspace: `../Luno/index.html`\n" +
-      "• Shared Dependencies: `../Library/index.html` (`DomBasics`, `UITools`, `DocumentReader`, `DictationWidget`)\n" +
-      "• Protocol Docs: See `Luno/docs/LunoWorkspaceHandoff.md`"
-    ];
-  }
 
+  static sidebar_doc_luno() {
+      return [
+        "Luno Cross-References:\n" +
+        `• Primary Workspace: [Luno Workspace](${PortalData.resolveAppUrl('Luno')})\n` +
+        `• Shared Dependencies: [Library Hub](${PortalData.resolveAppUrl('Library')}) (\`DomBasics\`, \`UITools\`, \`DocumentReader\`, \`DictationWidget\`)\n` +
+        "• Protocol Spec: `Luno/docs/LunoWorkspaceHandoff.md`"
+      ];
+    }
   static p_doc_homesetup() {
       const hsUrl = PortalData.resolveAppUrl('HomeSetup');
       return [
@@ -171,15 +170,15 @@ class PortalDocContent {
         "A strict **Zero-Leak Boundary** keeps all credentials in local OS environment files and keychains so secrets never enter AI prompts or tracked repositories."
       ];
     }
-  static sidebar_doc_homesetup() {
-    return [
-      "HomeSetup Cross-References:\n" +
-      "• Fleet Matrix & Port 8080 Mesh: `../HomeSetup/index.html#topology`\n" +
-      "• Universal Speech Engine: `../HomeSetup/index.html#dictation`\n" +
-      "• Portal Forking & Continuity Spec: `../HomeSetup/index.html#handoff`"
-    ];
-  }
 
+  static sidebar_doc_homesetup() {
+      return [
+        "HomeSetup Cross-References:\n" +
+        `• Fleet Matrix & Port 8080 Mesh: [HomeSetup Topology](${PortalData.resolveAppUrl('HomeSetup', '#topology')})\n` +
+        `• Universal Speech Engine: [HomeSetup Dictation](${PortalData.resolveAppUrl('HomeSetup', '#dictation')})\n` +
+        `• Continuity & Handoff: [HomeSetup Handoff](${PortalData.resolveAppUrl('HomeSetup', '#handoff')})`
+      ];
+    }
   static p_doc_career() {
       return [
         "Between 1994 and 1997 at Bentley Systems, Rob Brown designed and implemented **AccuDraw**, **SmartLine**, and **PowerSelector** for MicroStation—resulting in **US Patent #5,754,182** (Bentley's first corporate patent) and establishing the heads-up drafting standard across 48 of 50 U.S. State DOTs.",
@@ -229,8 +228,8 @@ class PortalDocContent {
 
   static p_doc_spear_drawing() {
       return [
-        `This new web-first initiative focuses on **beautiful, controllable freeform curves**—built for anyone to pick up and draw directly inside a web page without heavy CAD setup. Launch the **[Freeform Curve Drawing Studio](${PortalData.resolveAppUrl('QuoraToys')})** or **[DrawingApp](${PortalData.resolveAppUrl('DrawingApp')})** to experience the curve smoothing and interactive controls firsthand.`,
-        `While inspired by decades of building drawing tools, this initiative is intentionally distinct from 3D AccuDraw: it follows the lightweight, approachable spirit of **Aardvark** (Rob’s widely known classic Firefox extension) to give people an immediate creative tool that naturally invites curiosity about **[Luno Workspace](${PortalData.resolveAppUrl('Luno')})** and the rest of the ecosystem.`
+        `Launch the **[Kinetic Curve & Image Markup Studio](${PortalData.resolveAppUrl('QuoraToys')})** right in your browser. It replaces the clunky 1980s Adobe Illustrator Pen tool with a fast, fluid web interface: drag-and-drop or press **Ctrl+V** to paste any image, draw smooth curves with a **32px kinetic string-tether** (and direct rubber-wire bending) to eliminate hand tremors, add concave arrowheads, highlight rings, and crisp text callouts, and copy the finished graphic straight back to your clipboard for Quora or social media.`,
+        `It also includes an instant **Spot-the-Difference Optical Comparator** (50% Ghost Alpha, 600ms Optical Flashing, and Zebra Stripes). Unlike 3D CAD—which serves a specialized engineering audience—this free web markup tool is designed for broad everyday reach in the lightweight spirit of **Aardvark**, serving as a natural gateway to **[Luno Workspace](${PortalData.resolveAppUrl('Luno')})**, **[AccuCAD 3D](${PortalData.resolveAppUrl('accuCad')})**, and this entire living document format.`
       ];
     }
   static p_doc_spear_economics() {

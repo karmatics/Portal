@@ -161,12 +161,12 @@ class Portal {
           makeElement('div', { className: 'pt-kicker' }, 'Rob Brown • Public Workspace & Living Archive'),
           makeElement('h1', { className: 'pt-hero-h1' }, 'Welcome — Live Tools, Original Engineering, and an Open Book.'),
           makeElement('p', { className: 'pt-hero-p' },
-            'Everything I am building and documenting connects right here: a new lightweight Freeform Curve Drawing Studio, the Economics of Automation visual essay for everyday readers, my 3D AccuCAD & AccuDraw engineering record, the Luno AI cockpit behind it all, and an open personal overview.'
+            'Everything I am building and documenting connects right here: a free Kinetic Curve & Image Markup Studio (rethinking the Illustrator Pen tool for instant web use), the Economics of Automation visual essay for everyday readers, my 3D AccuCAD & AccuDraw engineering record, the Luno AI cockpit behind it all, and an open personal overview.'
           )
         ]),
         makeElement('div', { className: 'pt-hero-keys-strip' }, [
           makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => PortalModals.openGuidedTourDialog(this) }, '✨ Take a 4-Step Tour'),
-          makeElement('a', { href: PortalData.resolveAppUrl('QuoraToys'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-purple' }, '〰️ Try Curve Drawing Studio ↗'),
+          makeElement('a', { href: PortalData.resolveAppUrl('QuoraToys'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-purple' }, '〰️ Launch Curve & Markup App ↗'),
           makeElement('a', { href: PortalData.resolveAppUrl('accuCad'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '📐 Launch AccuCAD 3D ↗'),
           makeElement('a', { href: PortalData.resolveAppUrl('EconomicsOfAutomation'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-emerald' }, '🤖 Read Economics Essay ↗')
         ])
@@ -203,7 +203,6 @@ class Portal {
 
       return makeElement('section', { className: 'pt-hero', 'data-block-id': 'portal_hero' }, [left, right]);
     }
-
   _buildConstellationSvg() {
       const svg = makeElement('svg:svg', {
         viewBox: '0 0 460 232',
@@ -344,51 +343,63 @@ class Portal {
   }
 
   _buildPillarCard(p) {
-    const card = makeElement('article', {
-      className: 'pt-card',
-      'data-block-id': `pillar_${p.id}`,
-      style: {
-        borderLeft: `4px solid ${p.accent}`,
-        boxShadow: `0 10px 28px rgba(0,0,0,0.45), 0 0 18px ${p.accent}14`
-      }
-    });
+      const card = makeElement('article', {
+        className: 'pt-card',
+        'data-block-id': `pillar_${p.id}`,
+        style: {
+          borderLeft: `4px solid ${p.accent}`,
+          boxShadow: `0 10px 28px rgba(0,0,0,0.45), 0 0 18px ${p.accent}14`
+        }
+      });
 
-    card.appendChild(makeElement('div', { className: 'pt-card-head' }, [
-      makeElement('div', {}, [
-        makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', fontWeight: '800', color: p.accent } }, p.badge),
-        makeElement('h3', { className: 'pt-card-title' }, `${p.icon} ${p.name}`),
-        makeElement('div', { className: 'pt-card-sub', style: { color: '#94a3b8' } }, p.subtitle)
-      ])
-    ]));
+      card.appendChild(makeElement('div', { className: 'pt-card-head' }, [
+        makeElement('div', {}, [
+          makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', fontWeight: '800', color: p.accent } }, p.badge),
+          makeElement('a', {
+            href: p.url,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            style: { textDecoration: 'none', color: 'inherit', display: 'inline-block' }
+          }, [
+            makeElement('h3', { className: 'pt-card-title', style: { cursor: 'pointer' } }, `${p.icon} ${p.name} ↗`)
+          ]),
+          makeElement('div', { className: 'pt-card-sub', style: { color: '#94a3b8' } }, p.subtitle)
+        ])
+      ]));
 
-    card.appendChild(makeElement('p', { className: 'pt-card-summary' }, p.publicSummary));
-    card.appendChild(makeElement('div', {
-      style: { fontSize: '11.5px', color: '#94a3b8', backgroundColor: '#090e19', border: '1px solid #1a2333', borderRadius: '6px', padding: '8px 10px', lineHeight: '1.45' }
-    }, p.calmNote));
+      card.appendChild(makeElement('p', { className: 'pt-card-summary' }, p.publicSummary));
+      card.appendChild(makeElement('div', {
+        style: { fontSize: '11.5px', color: '#94a3b8', backgroundColor: '#090e19', border: '1px solid #1a2333', borderRadius: '6px', padding: '8px 10px', lineHeight: '1.45' }
+      }, p.calmNote));
 
-    card.appendChild(makeElement('div', { className: 'pt-tags' },
-      p.facts.map(f => makeElement('span', { className: 'pt-tag' }, f))
-    ));
+      card.appendChild(makeElement('div', { className: 'pt-tags' },
+        p.facts.map(f => makeElement('span', { className: 'pt-tag' }, f))
+      ));
 
-    card.appendChild(makeElement('div', { className: 'pt-card-footer' }, [
-      makeElement('a', { href: p.url, target: '_blank', className: 'pt-btn', style: { fontSize: '11px', padding: '4px 9px' } }, '↗ Open App'),
-      makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
-        makeElement('button', {
+      card.appendChild(makeElement('div', { className: 'pt-card-footer' }, [
+        makeElement('a', {
+          href: p.url,
+          target: '_blank',
+          rel: 'noopener noreferrer',
           className: 'pt-btn',
-          style: { fontSize: '11px', padding: '4px 9px', borderColor: `${p.accent}66`, color: p.accent },
-          onclick: () => PortalModals.openPillarDialog(p, this)
-        }, '🔍 Dig In'),
-        makeElement('button', {
-          className: 'pt-btn',
-          style: { fontSize: '11px', padding: '4px 9px' },
-          onclick: () => this.openInDocumentReader(p.docPageId)
-        }, '📖 Doc')
-      ])
-    ]));
+          style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent }
+        }, `🚀 Open App ↗`),
+        makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
+          makeElement('button', {
+            className: 'pt-btn',
+            style: { fontSize: '11px', padding: '4px 9px' },
+            onclick: () => PortalModals.openPillarDialog(p, this)
+          }, '🔍 Details'),
+          makeElement('button', {
+            className: 'pt-btn',
+            style: { fontSize: '11px', padding: '4px 9px' },
+            onclick: () => this.openInDocumentReader(p.docPageId)
+          }, '📖 Chapter')
+        ])
+      ]));
 
-    return card;
-  }
-
+      return card;
+    }
   async openInDocumentReader(pageId = 'luno') {
     this.mode = 'document';
     this.pendingDocPageId = pageId;
@@ -534,7 +545,7 @@ class Portal {
 
   _buildChapterDirectory() {
       const chapters = [
-        { id: 'spear_drawing', num: '1', label: 'Freeform Curve Drawing', col: '#00f2fe' },
+        { id: 'spear_drawing', num: '1', label: 'Kinetic Curve & Markup Studio', col: '#00f2fe' },
         { id: 'spear_economics', num: '2', label: 'Economics of Automation', col: '#34d399' },
         { id: 'spear_accucad', num: '3', label: 'AccuCAD 3D Workstation', col: '#38bdf8' },
         { id: 'luno', num: '4', label: 'Luno Workspace & Protocol', col: '#38bdf8' },
@@ -687,15 +698,15 @@ class Portal {
   _buildQuickDoors() {
       const doors = [
         {
-          title: '〰️ Try the Freeform Curve Drawing Tool',
-          desc: 'Smooth, expressive web curves inspired by the lightweight spirit of Aardvark—easy to open and use anywhere.',
+          title: '〰️ Kinetic Curve & Image Markup Studio',
+          desc: 'Paste an image (Ctrl+V), draw effortless kinetic curves, arrows, and callouts, and copy straight back to Quora or social media.',
           col: '#00f2fe',
-          btnText: 'Open Curve Studio ↗',
+          btnText: 'Launch Curve & Markup App ↗',
           url: PortalData.resolveAppUrl('QuoraToys')
         },
         {
           title: '📐 Launch AccuCAD 3D Workstation',
-          desc: 'See precision 3D WebGL drafting, tentative snapping, and AccuDraw orientation locks live in your browser.',
+          desc: 'See precision 3D WebGL drafting, tentative snapping, and AccuDraw orientation locks running live in your browser.',
           col: '#38bdf8',
           btnText: 'Open AccuCAD 3D ↗',
           url: PortalData.resolveAppUrl('accuCad')

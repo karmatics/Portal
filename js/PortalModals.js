@@ -340,9 +340,9 @@ class PortalModals {
         {
           title: '2. Two Public "Tip of the Spear" Initiatives',
           accent: '#34d399',
-          body: 'Start with whichever entry point fits you best: try the new Freeform Curve Drawing Studio (smooth, expressive web curves inspired by the lightweight spirit of Aardvark), or read Economics of Automation (plain-English essays and interactive simulations built for everyday readers).',
+          body: 'Start with whichever entry point fits you best: try the free Kinetic Curve & Image Markup Studio (an intuitive Pen-tool replacement where you Ctrl+V paste an image, draw smooth curves/arrows/text, and copy straight to social media—in the accessible spirit of Aardvark), or read Economics of Automation (plain-English visual essays and simulators for everyday readers).',
           actions: [
-            { label: '〰️ Open Curve Drawing Studio ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('QuoraToys') },
+            { label: '〰️ Open Curve & Markup Studio ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('QuoraToys') },
             { label: '🤖 Read Economics of Automation ↗', cls: 'pt-btn pt-btn-emerald', url: PortalData.resolveAppUrl('EconomicsOfAutomation') }
           ]
         },

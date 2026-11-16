@@ -327,103 +327,104 @@ class PortalModals {
   }
 
   static openGuidedTourDialog(portalApp) {
-      let step = 0;
-      const steps = [
-        {
-          title: '1. Welcome — What This Whole System Is',
-          accent: '#00f2fe',
-          body: 'This is a live, self-documenting software workspace and public archive. Instead of scattered links or static PDFs, every initiative, technical specification, and personal record lives as an interactive web application powered by Luno.',
-          actions: [
-            { label: '⚙️ Generate Live summaries.json', cls: 'pt-btn pt-btn-emerald', fn: () => PortalModals.openSummaryJsonDialog() }
-          ]
-        },
-        {
-          title: '2. Two Public "Tip of the Spear" Initiatives',
-          accent: '#34d399',
-          body: 'Start with whichever entry point fits you best: try the free Kinetic Curve & Image Markup Studio (an intuitive Pen-tool replacement where you Ctrl+V paste an image, draw smooth curves/arrows/text, and copy straight to social media—in the accessible spirit of Aardvark), or read Economics of Automation (plain-English visual essays and simulators for everyday readers).',
-          actions: [
-            { label: '〰️ Open Curve & Markup Studio ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('QuoraToys') },
-            { label: '🤖 Read Economics of Automation ↗', cls: 'pt-btn pt-btn-emerald', url: PortalData.resolveAppUrl('EconomicsOfAutomation') }
-          ]
-        },
-        {
-          title: '3. Precision 3D CAD & Patent Track Record',
-          accent: '#38bdf8',
-          body: 'Launch AccuCAD 3D right in your browser to see precision WebGL drafting, kinetic compass locks, and tentative snapping—or review the 30-year US Patent #5,754,182 historical archive and independent valuation models.',
-          actions: [
-            { label: '📐 Launch AccuCAD 3D ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('accuCad') },
-            { label: '📊 View Valuation Model ↗', cls: 'pt-btn pt-btn-amber', url: PortalData.resolveAppUrl('ValuationOfAccudraw') }
-          ]
-        },
-        {
-          title: '4. Inspect Everything & Export to Any AI',
-          accent: '#c084fc',
-          body: 'Nothing here asks you to take claims on faith. You can export the entire documentation set into ChatGPT, Claude, or Gemini, inspect any page element with Aardvark, or copy an unprimed Google Search prompt to verify the patent and valuation record yourself.',
-          actions: [
-            { label: '🔑 Open Keys & AI Export', cls: 'pt-btn pt-btn-purple', fn: () => { dlg.close(); PortalModals.openVisitorKeysDialog(portalApp); } },
-            { label: '📖 Open Document View', cls: 'pt-btn', fn: () => { dlg.close(); if (portalApp) portalApp.openInDocumentReader('spear_drawing'); } }
-          ]
-        }
-      ];
+        let step = 0;
+        const steps = [
+          {
+            title: '1. Living Documents Built for People AND Large LLM Prompts',
+            accent: '#00f2fe',
+            body: 'This system is built on Luno—Rob’s primary code-generator and living-document initiative. Every area is readable as an interactive web app for family, financial, or technical reviewers, AND is engineered to export very large, structured prompts to ChatGPT, Claude, or Gemini to organize life, career direction, and software.',
+            actions: [
+              { label: '🌙 Open Luno Workspace ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('Luno') },
+              { label: '⚙️ Generate Live summaries.json', cls: 'pt-btn pt-btn-emerald', fn: () => PortalModals.openSummaryJsonDialog() }
+            ]
+          },
+          {
+            title: '2. CadPlan & AccuCAD: Agent-Ready Spec + Built-In 3D App',
+            accent: '#38bdf8',
+            body: 'Built on Rob’s US Patent #5,754,182 AccuDraw & SmartLine background, CadPlan is both an executable spec (with prose and code) and a live 3D CAD workspace embedded inside the document—explicitly designed so AI coding agents can insert AccuDraw into open-source AutoCAD & MicroStation clones (like Rust CADCraft).',
+            actions: [
+              { label: '📐 Open CadPlan (Spec + 3D App) ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('CadPlan') },
+              { label: '🚀 Launch AccuCAD 3D ↗', cls: 'pt-btn', url: PortalData.resolveAppUrl('accuCad') }
+            ]
+          },
+          {
+            title: '3. Kinetic Curve Studio & Public Economics Reading',
+            accent: '#c084fc',
+            body: 'The Kinetic Curve & Image Markup Studio makes social-media image annotation effortless using kinetic string-tether smoothing—and is cleanly modular so anyone can alter or extend it with Luno. Alongside it, Economics of Automation offers plain-English visual essays and simulators.',
+            actions: [
+              { label: '〰️ Open Kinetic Curve Studio ↗', cls: 'pt-btn pt-btn-purple', url: PortalData.resolveAppUrl('QuoraToys') },
+              { label: '🤖 Read Economics of Automation ↗', cls: 'pt-btn pt-btn-emerald', url: PortalData.resolveAppUrl('EconomicsOfAutomation') }
+            ]
+          },
+          {
+            title: '4. Verifiable Financial, Patent & Personal Records',
+            accent: '#f59e0b',
+            body: 'Every claim—from the $1.2B–$5.54B+ AccuDraw valuation attribution to Rob’s stabilized Nov 2026 personal and custody-prep context—can be exported as clean Markdown, inspected in-situ with Aardvark, or tested independently with a blind unprimed Google Search prompt.',
+            actions: [
+              { label: '🔑 Open Keys & AI Export', cls: 'pt-btn pt-btn-purple', fn: () => { dlg.close(); PortalModals.openVisitorKeysDialog(portalApp); } },
+              { label: '📊 View Valuation Model ↗', cls: 'pt-btn pt-btn-amber', url: PortalData.resolveAppUrl('ValuationOfAccudraw') }
+            ]
+          }
+        ];
 
-      const wrap = makeElement('div', {
-        style: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px', height: '100%' }
-      });
-      const stepHost = makeElement('div', { style: { flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' } });
-      const navFooter = makeElement('div', {
-        style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #1e293b' }
-      });
+        const wrap = makeElement('div', {
+          style: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px', height: '100%' }
+        });
+        const stepHost = makeElement('div', { style: { flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' } });
+        const navFooter = makeElement('div', {
+          style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #1e293b' }
+        });
 
-      const renderStep = () => {
-        const s = steps[step];
-        stepHost.innerHTML = '';
-        stepHost.appendChild(makeElement('div', {
-          style: { borderLeft: `4px solid ${s.accent}`, paddingLeft: '12px' }
-        }, [
-          makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: s.accent, fontWeight: 'bold' } }, `STEP ${step + 1} OF ${steps.length}`),
-          makeElement('h3', { style: { fontSize: '1.2rem', fontWeight: '800', color: '#f8fafc', margin: '4px 0 0 0' } }, s.title)
-        ]));
+        const renderStep = () => {
+          const s = steps[step];
+          stepHost.innerHTML = '';
+          stepHost.appendChild(makeElement('div', {
+            style: { borderLeft: `4px solid ${s.accent}`, paddingLeft: '12px' }
+          }, [
+            makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: s.accent, fontWeight: 'bold' } }, `OVERVIEW ${step + 1} OF ${steps.length}`),
+            makeElement('h3', { style: { fontSize: '1.2rem', fontWeight: '800', color: '#f8fafc', margin: '4px 0 0 0' } }, s.title)
+          ]));
 
-        stepHost.appendChild(makeElement('div', {
-          style: { backgroundColor: '#0c1322', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px 16px', fontSize: '13.5px', lineHeight: '1.65', color: '#cbd5e1' }
-        }, s.body));
+          stepHost.appendChild(makeElement('div', {
+            style: { backgroundColor: '#0c1322', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px 16px', fontSize: '13.5px', lineHeight: '1.65', color: '#cbd5e1' }
+          }, s.body));
 
-        stepHost.appendChild(makeElement('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
-          s.actions.map(a => a.url
-            ? makeElement('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', className: a.cls }, a.label)
-            : makeElement('button', { className: a.cls, onclick: a.fn }, a.label)
-          )
-        ));
+          stepHost.appendChild(makeElement('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+            s.actions.map(a => a.url
+              ? makeElement('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', className: a.cls }, a.label)
+              : makeElement('button', { className: a.cls, onclick: a.fn }, a.label)
+            )
+          ));
 
-        navFooter.innerHTML = '';
-        navFooter.append(
-          makeElement('button', {
-            className: 'pt-btn',
-            disabled: step === 0,
-            style: { opacity: step === 0 ? '0.45' : '1' },
-            onclick: () => { if (step > 0) { step--; renderStep(); } }
-          }, '◀ Previous'),
-          makeElement('div', { style: { display: 'flex', gap: '6px' } },
-            steps.map((_, i) => makeElement('span', {
-              style: {
-                width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer',
-                backgroundColor: i === step ? '#00f2fe' : '#334155',
-                boxShadow: i === step ? '0 0 8px #00f2fe' : 'none'
-              },
-              onclick: () => { step = i; renderStep(); }
-            }))
-          ),
-          step < steps.length - 1
-            ? makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => { step++; renderStep(); } }, 'Next ▶')
-            : makeElement('button', { className: 'pt-btn pt-btn-emerald', onclick: () => dlg.close() }, '✓ Start Exploring')
-        );
-      };
+          navFooter.innerHTML = '';
+          navFooter.append(
+            makeElement('button', {
+              className: 'pt-btn',
+              disabled: step === 0,
+              style: { opacity: step === 0 ? '0.45' : '1' },
+              onclick: () => { if (step > 0) { step--; renderStep(); } }
+            }, '◀ Previous'),
+            makeElement('div', { style: { display: 'flex', gap: '6px' } },
+              steps.map((_, i) => makeElement('span', {
+                style: {
+                  width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer',
+                  backgroundColor: i === step ? '#00f2fe' : '#334155',
+                  boxShadow: i === step ? '0 0 8px #00f2fe' : 'none'
+                },
+                onclick: () => { step = i; renderStep(); }
+              }))
+            ),
+            step < steps.length - 1
+              ? makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => { step++; renderStep(); } }, 'Next ▶')
+              : makeElement('button', { className: 'pt-btn pt-btn-emerald', onclick: () => dlg.close() }, '✓ Close Tour')
+          );
+        };
 
-      wrap.append(stepHost, navFooter);
-      const dlg = this._makeDialogBox('✨ Welcome — Guided Tour of Rob Brown’s Portal', 640, 390, wrap);
-      renderStep();
-      return dlg;
-    }
+        wrap.append(stepHost, navFooter);
+        const dlg = this._makeDialogBox('✨ System Overview — Rob Brown’s Living Portal', 660, 410, wrap);
+        renderStep();
+        return dlg;
+      }
 }
 
 globalThis.PortalModals = PortalModals;

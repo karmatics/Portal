@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "generator": "PortalSummaryEngine",
-  "generatedAt": "2026-11-15T23:36:00.000Z",
+  "generatedAt": "2026-11-15T23:55:00.000Z",
   "sensitiveIncluded": false,
   "note": "Initial static summary baseline; click 'Summary JSON' inside Portal to regenerate live from workspace files.",
   "pillars": [
@@ -33,7 +33,7 @@
       "id": "family",
       "name": "Family, Stability & Legal Context",
       "url": "../situation/index.html",
-      "summary": "Stabilized Nov 2026 living status, non-caregiver clarification, daughter court documentation, and gated deeper POA context."
+      "summary": "Stabilized Nov 2026 living status, daughter court documentation, and gated deeper POA context."
     },
     {
       "id": "economics",

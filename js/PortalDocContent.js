@@ -3,55 +3,60 @@ class PortalDocContent {
   static getMeta(pageId = null) {
       const metas = {
         spear_drawing: {
-          kicker: 'Chapter 1 • Tip of the Spear (Live App)',
-          title: '1. Drawing App & AccuCAD 3D Workstation',
-          subtitle: 'Experience the live 3D WebGL drafting studio and spline vector drawing tools directly in the browser.'
+          kicker: 'Chapter 1 • Tip of the Spear (New Initiative)',
+          title: '1. Freeform Curve Drawing Studio & Aardvark Spirit',
+          subtitle: 'Beautiful, controllable web-first curves—lightweight and immediate, separate from 3D CAD.'
         },
         spear_economics: {
           kicker: 'Chapter 2 • Tip of the Spear (Public Reading)',
           title: '2. Economics of Automation & The Robot Dividend',
           subtitle: 'Clear, accessible reading and interactive simulations showing how society thrives as AI and robotics scale.'
         },
+        spear_accucad: {
+          kicker: 'Chapter 3 • Live 3D Engineering',
+          title: '3. AccuCAD 3D Workstation & Interactive Drafting',
+          subtitle: 'Full 3D WebGL CAD running directly in the browser with AccuDraw orientation locks and tentative snapping.'
+        },
         luno: {
-          kicker: 'Chapter 3 • Platform Core',
-          title: '3. Luno Workspace & The HTML Container Protocol',
+          kicker: 'Chapter 4 • Platform Core',
+          title: '4. Luno Workspace & The HTML Container Protocol',
           subtitle: 'The phone-first AI development cockpit and in-browser AST patching engine powering all projects.'
         },
         homesetup: {
-          kicker: 'Chapter 4 • Infrastructure & Speech',
-          title: '4. Home Setup, Port 8080 Fleet & Universal Dictation',
+          kicker: 'Chapter 5 • Infrastructure & Speech',
+          title: '5. Home Setup, Port 8080 Fleet & Universal Dictation',
           subtitle: 'Multi-node Mac/Ubuntu synchronization, zero-leak credential storage, and speech-to-text tools.'
         },
         career: {
-          kicker: 'Chapter 5 • Engineering & Patents',
-          title: '5. Career, AccuDraw (US Patent #5,754,182) & Spatial CAD',
-          subtitle: 'Historical Bentley Systems archives, primary patent filings, and open-source 3D CAD mathematics.'
+          kicker: 'Chapter 6 • Engineering & Patents',
+          title: '6. AccuDraw (US Patent #5,754,182) & Aardvark Heritage',
+          subtitle: 'Historical Bentley Systems archives, primary patent filings, and lightweight web-tool pedigree.'
         },
         financial: {
-          kicker: 'Chapter 6 • Economic Attribution',
-          title: '6. Financial Valuation Record & Independent Verification',
+          kicker: 'Chapter 7 • Economic Attribution',
+          title: '7. Financial Valuation Record & Independent Verification',
           subtitle: 'Forensic $1.2B–$5.54B+ enterprise value counterfactuals contrasted transparently with personal reality.'
         },
         family: {
-          kicker: 'Chapter 7 • Personal & Legal Stability',
-          title: '7. Family Situation, Stability (Nov 2026) & Gated Context',
-          subtitle: 'Stabilized living overview, daughter documentation priorities, and protected POA background.'
+          kicker: 'Chapter 8 • Personal Stability & Context',
+          title: '8. Family Situation, Stability (Nov 2026) & Protected Layer',
+          subtitle: 'Stabilized living overview, daughter documentation priorities, and gated sensitive family context.'
         },
         economics: {
-          kicker: 'Chapter 8 • Architecture Hub',
-          title: '8. Master Opus Router & Shared Library Hub',
+          kicker: 'Chapter 9 • Architecture Hub',
+          title: '9. Master Opus Router & Shared Library Hub',
           subtitle: 'How the 4-Quadrant Opus and zero-copy Library tie every repository together.'
         },
         visitor_keys: {
-          kicker: 'Chapter 9 • Transparency & AI Export',
-          title: '9. Keys to the System: Using Export & Annotations With Any AI',
-          subtitle: 'Step-by-step tools for friends, collaborators, journalists, and counsel to export, query, and verify.'
+          kicker: 'Chapter 10 • Transparency & AI Export',
+          title: '10. Keys to the System: Using Export & Annotations With Any AI',
+          subtitle: 'Step-by-step tools for family, collaborators, researchers, and counsel to export, query, and verify.'
         }
       };
       return metas[pageId] || {
         kicker: 'Integrated Living Archive',
         title: 'Rob Brown — Public Portal & Connected Dossiers',
-        subtitle: 'A unified, cross-referenced guide to Luno, HomeSetup, Career & CAD Inventions, Financial Valuation, Family Context, and Post-Labor Economics.'
+        subtitle: 'A unified, cross-referenced guide to live apps, engineering records, personal stability, and economic research.'
       };
     }
 
@@ -59,8 +64,8 @@ class PortalDocContent {
       return [
         {
           section: 'spear_drawing',
-          partLabel: 'Tip of the Spear • Live Software',
-          title: 'Drawing App & AccuCAD 3D Workstation',
+          partLabel: 'Tip of the Spear • New Initiative',
+          title: 'Freeform Curve Drawing Studio',
           blocks: [
             { id: 'p_doc_spear_drawing', type: 'p' }
           ]
@@ -74,8 +79,16 @@ class PortalDocContent {
           ]
         },
         {
+          section: 'spear_accucad',
+          partLabel: 'Live 3D Engineering',
+          title: 'AccuCAD 3D Workstation',
+          blocks: [
+            { id: 'p_doc_spear_accucad', type: 'p' }
+          ]
+        },
+        {
           section: 'luno',
-          partLabel: 'Part 3 • Development Engine',
+          partLabel: 'Part 4 • Development Engine',
           title: 'Luno Workspace & The HTML Container Protocol',
           blocks: [
             { id: 'p_doc_luno', type: 'p' },
@@ -84,7 +97,7 @@ class PortalDocContent {
         },
         {
           section: 'homesetup',
-          partLabel: 'Part 4 • Infrastructure & Speech',
+          partLabel: 'Part 5 • Infrastructure & Speech',
           title: 'Home Setup, Port 8080 Fleet & Universal Dictation',
           blocks: [
             { id: 'p_doc_homesetup', type: 'p' },
@@ -93,15 +106,15 @@ class PortalDocContent {
         },
         {
           section: 'career',
-          partLabel: 'Part 5 • Engineering & Patents',
-          title: 'Career, AccuDraw (US Patent #5,754,182) & Spatial CAD',
+          partLabel: 'Part 6 • Engineering & Patents',
+          title: 'AccuDraw (US Patent #5,754,182) & Aardvark Heritage',
           blocks: [
             { id: 'p_doc_career', type: 'p' }
           ]
         },
         {
           section: 'financial',
-          partLabel: 'Part 6 • Economic Attribution',
+          partLabel: 'Part 7 • Economic Attribution',
           title: 'Financial Valuation Record & Independent Verification',
           blocks: [
             { id: 'p_doc_financial', type: 'p' }
@@ -109,16 +122,16 @@ class PortalDocContent {
         },
         {
           section: 'family',
-          partLabel: 'Part 7 • Personal & Legal Stability',
-          title: 'Family Situation, Stability (Nov 2026) & Gated Context',
+          partLabel: 'Part 8 • Personal Stability',
+          title: 'Family Situation, Stability (Nov 2026) & Protected Layer',
           blocks: [
             { id: 'p_doc_family_public', type: 'p' },
-            { id: 'p_doc_family_poa', type: 'p', sensitive: true, sensitiveLabel: 'Additional Family & POA Context' }
+            { id: 'p_doc_family_poa', type: 'p', sensitive: true, sensitiveLabel: 'Sensitive Family Context' }
           ]
         },
         {
           section: 'economics',
-          partLabel: 'Part 8 • Architecture Hub',
+          partLabel: 'Part 9 • Architecture Hub',
           title: 'Master Opus Router & Shared Library Hub',
           blocks: [
             { id: 'p_doc_economics', type: 'p' }
@@ -126,7 +139,7 @@ class PortalDocContent {
         },
         {
           section: 'visitor_keys',
-          partLabel: 'Part 9 • Transparency & AI Export',
+          partLabel: 'Part 10 • Transparency & AI Export',
           title: 'Keys to the System: Using Export & Annotations With Any AI',
           blocks: [
             { id: 'p_doc_keys', type: 'p' },
@@ -183,8 +196,8 @@ class PortalDocContent {
 
   static p_doc_family_public() {
       return [
-        "As of **November 2026**, day-to-day housing and utilities are stable following mid-2026 transitions. Current personal and legal focus centers on preparing well-documented court filings concerning Rob's daughter while advancing open-source and commercial software work.",
-        "While this system hides nothing—every underlying document and source file in the repository is openly inspectable—detailed family and Power of Attorney (POA) administrative background is kept in an optional protected layer (`SensitiveContextGate`) rather than placed as front-page headlines."
+        "As of **November 2026**, day-to-day housing and utilities are stable following mid-2026 transitions. Current personal focus centers on preparing accurate, constructive documentation concerning Rob's daughter while advancing open-source and commercial software work.",
+        "While nothing in this repository is concealed—every underlying document and source file is openly inspectable—sensitive family background is kept in an optional protected layer (`SensitiveContextGate`) rather than placed as front-page headlines."
       ];
     }
   static p_doc_family_poa() {
@@ -216,15 +229,21 @@ class PortalDocContent {
 
   static p_doc_spear_drawing() {
       return [
-        `To see the engineering quality firsthand without reading technical papers first, launch **[AccuCAD 3D Workstation](${PortalData.resolveAppUrl('accuCad')})** directly in your browser. It demonstrates real-time 3D WebGL drafting, tentative snapping, direction-cosine axis locks, and the floating AccuDraw kinetic compass.`,
-        `Alongside AccuCAD, the **[DrawingApp](${PortalData.resolveAppUrl('DrawingApp')})** and **[QuoraToys](${PortalData.resolveAppUrl('QuoraToys')})** initiatives bring interactive Bezier/spline drawing, color-ring controls, and spatial canvas annotations to the web—serving as the public "tip of the spear" to draw attention to **[Luno Workspace](${PortalData.resolveAppUrl('Luno')})** and the entire repository suite.`
+        `This new web-first initiative focuses on **beautiful, controllable freeform curves**—built for anyone to pick up and draw directly inside a web page without heavy CAD setup. Launch the **[Freeform Curve Drawing Studio](${PortalData.resolveAppUrl('QuoraToys')})** or **[DrawingApp](${PortalData.resolveAppUrl('DrawingApp')})** to experience the curve smoothing and interactive controls firsthand.`,
+        `While inspired by decades of building drawing tools, this initiative is intentionally distinct from 3D AccuDraw: it follows the lightweight, approachable spirit of **Aardvark** (Rob’s widely known classic Firefox extension) to give people an immediate creative tool that naturally invites curiosity about **[Luno Workspace](${PortalData.resolveAppUrl('Luno')})** and the rest of the ecosystem.`
       ];
     }
-
   static p_doc_spear_economics() {
       return [
         `For everyday readers who want clear, approachable reading material rather than CAD tools, **[Economics of Automation](${PortalData.resolveAppUrl('EconomicsOfAutomation')})** presents the **Colony of 100,000** thought experiment and an interactive tax & demand simulator.`,
         `Together with **[Jobs & AI](${PortalData.resolveAppUrl('JobsAndAI')})**, it explains why automating labor creates abundance only when paired with a universal **Robot Dividend**—and links readers directly into the rest of the living archive.`
+      ];
+    }
+
+  static p_doc_spear_accucad() {
+      return [
+        `To experience precision 3D engineering right in the browser, launch **[AccuCAD 3D Workstation](${PortalData.resolveAppUrl('accuCad')})**. It implements AccuDraw’s floating kinetic compass, direction-cosine axis locks, tentative snapping, and thick-line 3D rendering.`,
+        `You can also explore the full technical specification in **[CadPlan](${PortalData.resolveAppUrl('CadPlan')})** and wireless mobile pairing in **[TouchController](${PortalData.resolveAppUrl('TouchController')})**.`
       ];
     }
 }

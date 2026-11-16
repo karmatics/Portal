@@ -1,10 +1,34 @@
 {
   "schemaVersion": "1.0.0",
   "generator": "PortalSummaryEngine",
-  "generatedAt": "2026-11-15T23:55:00.000Z",
+  "generatedAt": "2026-11-15T23:58:00.000Z",
   "sensitiveIncluded": false,
   "note": "Initial static summary baseline; click 'Summary JSON' inside Portal to regenerate live from workspace files.",
   "pillars": [
+    {
+      "id": "curve_drawing_spear",
+      "name": "Freeform Curve Drawing Studio",
+      "url": "../QuoraToys/index.html",
+      "summary": "Web-first drawing initiative focused on smooth, controllable freeform curves in the lightweight spirit of Aardvark."
+    },
+    {
+      "id": "economics_spear",
+      "name": "Economics of Automation",
+      "url": "../EconomicsOfAutomation/index.html",
+      "summary": "Accessible visual essay and interactive Robot Dividend simulator written for everyday readers."
+    },
+    {
+      "id": "accucad_live",
+      "name": "AccuCAD 3D Workstation",
+      "url": "../accuCad/index.html",
+      "summary": "Live 3D WebGL CAD drafting studio with kinetic orientation locks and tentative snapping."
+    },
+    {
+      "id": "career",
+      "name": "AccuDraw & Aardvark Heritage",
+      "url": "../accudraw/index.html",
+      "summary": "US Patent #5,754,182 historical record, SmartLine, 1995-1996 reprints, and Aardvark legacy."
+    },
     {
       "id": "luno",
       "name": "Luno Workspace",
@@ -18,12 +42,6 @@
       "summary": "Multi-node Port 8080 federation (Mac Mini & Ubuntu), zero-leak secret boundaries, and universal speech dictation."
     },
     {
-      "id": "career",
-      "name": "Career & CAD Inventions",
-      "url": "../CadPlan/index.html",
-      "summary": "AccuDraw & SmartLine (US Patent #5,754,182) plus modern 3D WebGL CAD workstations."
-    },
-    {
       "id": "financial",
       "name": "Financial & Valuation Record",
       "url": "../ValuationOfAccudraw/index.html",
@@ -31,15 +49,15 @@
     },
     {
       "id": "family",
-      "name": "Family, Stability & Legal Context",
+      "name": "Family, Stability & Personal Context",
       "url": "../situation/index.html",
-      "summary": "Stabilized Nov 2026 living status, daughter court documentation, and gated deeper POA context."
+      "summary": "Stabilized Nov 2026 living status, daughter documentation focus, and gated sensitive family context."
     },
     {
       "id": "economics",
-      "name": "Post-Labor Economics & Opus",
-      "url": "../EconomicsOfAutomation/index.html",
-      "summary": "The Robot Dividend, Colony of 100,000, JobsAndAI empirical thesis, and the 4-Quadrant Opus router."
+      "name": "Master Opus & Shared Library",
+      "url": "../Opus/index.html",
+      "summary": "4-quadrant living knowledge router and zero-copy shared UI/document Library."
     }
   ]
 }

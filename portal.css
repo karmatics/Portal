@@ -138,10 +138,10 @@
 .pt-container {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 26px 20px 0;
+  padding: 24px 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 
 .pt-hero {
@@ -151,7 +151,7 @@
   padding: 26px 28px;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55), 0 0 28px rgba(0, 242, 254, 0.06);
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1.22fr 1fr;
   gap: 24px;
   align-items: stretch;
 }
@@ -186,7 +186,18 @@
   font-size: 14.5px;
   line-height: 1.65;
   color: #cbd5e1;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
+}
+
+.pt-hero-subnote {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #94a3b8;
+  background-color: rgba(0, 242, 254, 0.05);
+  border: 1px solid rgba(0, 242, 254, 0.22);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
 }
 
 .pt-hero-keys-strip {
@@ -195,7 +206,6 @@
   gap: 8px;
 }
 
-/* Interactive Hero Right Panel (Curve Toy + Constellation Tabs) */
 .pt-constellation-box {
   background-color: #05080f;
   border: 1px solid #1e293b;
@@ -207,6 +217,15 @@
   gap: 8px;
 }
 
+.pt-constellation-node {
+  cursor: pointer;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.pt-constellation-node:hover {
+  filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.7));
+}
+
 .pt-visual-tabs {
   display: flex;
   justify-content: space-between;
@@ -216,25 +235,52 @@
   padding-bottom: 6px;
 }
 
-.pt-visual-tab-btn {
-  background-color: transparent;
-  color: #94a3b8;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 4px 9px;
-  font-family: var(--pt-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  cursor: pointer;
+/* Ecosystem Role Strip (Portal vs Opus vs Situation) */
+.pt-ecosystem-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
 }
 
-.pt-visual-tab-btn.active {
-  background-color: #082f49;
-  color: var(--pt-cyan);
-  border-color: rgba(0, 242, 254, 0.45);
+.pt-eco-pill {
+  background-color: var(--pt-surface);
+  border: 1px solid var(--pt-border);
+  border-radius: 10px;
+  padding: 11px 14px;
 }
 
-/* Three-Door Quick Start Strip */
+/* 6-Card Key Highlights At a Glance */
+.pt-highlights-wrap {
+  background-color: rgba(11, 16, 27, 0.72);
+  border: 1px solid var(--pt-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.pt-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 14px;
+}
+
+.pt-highlight-card {
+  background-color: var(--pt-surface);
+  border: 1px solid var(--pt-border);
+  border-radius: 12px;
+  padding: 15px 17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.14s ease;
+}
+
+.pt-highlight-card:hover {
+  transform: translateY(-2px);
+  background-color: var(--pt-card);
+}
+
+/* Legacy door-card fallback */
 .pt-doors-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

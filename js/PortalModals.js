@@ -78,6 +78,8 @@ class PortalModals {
 
       body.append(head, summaryBox, calmBanner);
 
+      let dlg = null;
+
       if (pillar.sensitiveSummary) {
         if (isUnlocked) {
           body.appendChild(makeElement('div', {
@@ -91,14 +93,18 @@ class PortalModals {
               color: '#e9d5ff'
             }
           }, [
-            makeElement('strong', { style: { display: 'block', color: '#d8b4fe', marginBottom: '4px', fontSize: '11px', fontFamily: 'var(--pt-mono)' } }, '🔓 SENSITIVE FAMILY CONTEXT (UNLOCKED):'),
+            makeElement('strong', { style: { display: 'block', color: '#d8b4fe', marginBottom: '4px', fontSize: '11px', fontFamily: 'var(--pt-mono)' } }, '🔓 ADDITIONAL PERSONAL & FAMILY CONTEXT (UNLOCKED):'),
             pillar.sensitiveSummary
           ]));
         } else if (typeof SensitiveContextGate !== 'undefined') {
           body.appendChild(SensitiveContextGate.renderLockedBlock(
-            { id: 'modal_sensitive_family', sensitiveLabel: 'Sensitive Family Context' },
+            {
+              id: 'modal_sensitive_family',
+              sensitiveLabel: 'Additional Family & Legal Context',
+              sensitiveSummary: 'Protected layer containing sensitive family, caregiving, and dispute records (hidden by default; enter access code to view).'
+            },
             () => {
-              dlg.close();
+              if (dlg) dlg.close();
               PortalModals.openPillarDialog(pillar, portalApp);
               if (portalApp) portalApp.refresh();
             }
@@ -120,7 +126,7 @@ class PortalModals {
       const linksCard = makeElement('div', {
         style: { backgroundColor: '#05080f', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px 12px' }
       }, [
-        makeElement('div', { style: { fontSize: '10.5px', fontFamily: 'var(--pt-mono)', color: '#10b981', fontWeight: 'bold', marginBottom: '6px' } }, '🔗 CONNECTED DOSSIERS:'),
+        makeElement('div', { style: { fontSize: '10.5px', fontFamily: 'var(--pt-mono)', color: '#10b981', fontWeight: 'bold', marginBottom: '6px' } }, '🔗 CONNECTED DOCUMENTS & APPS:'),
         makeElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
           (pillar.crossLinks || []).map(cl => makeElement('button', {
             className: 'pt-btn',
@@ -128,7 +134,7 @@ class PortalModals {
             onclick: () => {
               const target = PortalData.getPillars().find(p => p.id === cl.targetId);
               if (target) {
-                dlg.close();
+                if (dlg) dlg.close();
                 PortalModals.openPillarDialog(target, portalApp);
               }
             }
@@ -143,7 +149,7 @@ class PortalModals {
         style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', paddingTop: '10px', borderTop: '1px solid #1e293b' }
       }, [
         makeElement('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } }, [
-          makeElement('a', { href: pillar.url, target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, `↗ Open ${pillar.name}`),
+          makeElement('a', { href: pillar.url, target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, pillar.openLabel || `↗ Open ${pillar.name}`),
           ...(pillar.extraLinks || []).map(el => makeElement('a', { href: el.url, target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, `↗ ${el.label}`))
         ]),
         makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
@@ -151,11 +157,11 @@ class PortalModals {
             className: 'pt-btn pt-btn-emerald',
             onclick: () => {
               if (portalApp) {
-                dlg.close();
+                if (dlg) dlg.close();
                 portalApp.openInDocumentReader(pillar.docPageId);
               }
             }
-          }, '📖 Open in Doc Reader'),
+          }, '📖 Read Chapter'),
           makeElement('button', {
             className: 'pt-btn',
             onclick: () => {
@@ -167,86 +173,87 @@ class PortalModals {
       ]);
       body.appendChild(footer);
 
-      const dlg = this._makeDialogBox(`${pillar.icon} ${pillar.name} — Deep-Dive Inspector`, 700, 560, body);
+      dlg = this._makeDialogBox(`${pillar.icon} ${pillar.name} — Deep-Dive Inspector`, 700, 560, body);
       return dlg;
     }
   static openVisitorKeysDialog(portalApp) {
-    const body = makeElement('div', {
-      style: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px' }
-    });
+      const body = makeElement('div', {
+        style: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px' }
+      });
 
-    body.appendChild(makeElement('div', {
-      style: { backgroundColor: '#0c1322', border: '1px solid rgba(0, 242, 254, 0.35)', borderRadius: '8px', padding: '14px 16px' }
-    }, [
-      makeElement('strong', { style: { color: '#00f2fe', fontSize: '13.5px', display: 'block', marginBottom: '6px' } }, '🔑 Giving Every Visitor the Keys to This Documentation'),
-      makeElement('p', { style: { fontSize: '13px', lineHeight: '1.6', color: '#cbd5e1', margin: 0 } },
-        'Whether you are a friend, technical collaborator, journalist, or legal counsel reviewing my record, you can export clean Markdown directly into ChatGPT, Claude, or Gemini to ask questions, verify claims, or help organize next steps.'
-      )
-    ]));
-
-    const steps = [
-      {
-        title: '1. Copy Complete Multi-Domain AI Briefing',
-        desc: 'Compiles calm, factual summaries of Luno, HomeSetup, Career/AccuDraw, Financial Valuation, Family Status, and Economics into a single clipboard prompt.',
-        btnText: '📋 Copy Complete AI Briefing',
-        btnCls: 'pt-btn pt-btn-cyan',
-        action: async () => {
-          const sumJson = await PortalSummaryEngine.generateSummaries(null, {
-            includeSensitive: typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked()
-          });
-          const md = PortalSummaryEngine.buildVisitorAiBriefing(sumJson);
-          await navigator.clipboard.writeText(md);
-          alert('✓ Copied complete AI briefing to clipboard! Paste it into any AI assistant.');
-        }
-      },
-      {
-        title: '2. Run the Blind Unprimed Google Search Verification',
-        desc: 'Copies a neutral search prompt that never mentions Rob Brown’s name, letting you verify the US Patent #5,754,182 attribution and Bentley Systems valuation independently.',
-        btnText: '🔎 Copy Unprimed Search Prompt',
-        btnCls: 'pt-btn pt-btn-amber',
-        action: async () => {
-          await navigator.clipboard.writeText(PortalData.getUnprimedVerificationPrompt());
-          alert('✓ Copied unprimed search prompt! Open an incognito window on Google or Gemini and paste it.');
-        }
-      },
-      {
-        title: '3. Open Integrated Document Reader & Export MD',
-        desc: 'Switches into full DocumentReader mode with SidePanel chapters, in-situ Aardvark element inspection, note attachment, and full Markdown export.',
-        btnText: '📖 Enter Document Mode',
-        btnCls: 'pt-btn pt-btn-emerald',
-        action: () => {
-          dlg.close();
-          if (portalApp) portalApp.openInDocumentReader('frontpage');
-        }
-      }
-    ];
-
-    steps.forEach(s => {
       body.appendChild(makeElement('div', {
-        style: {
-          backgroundColor: '#070b14',
-          border: '1px solid #1e293b',
-          borderRadius: '8px',
-          padding: '12px 14px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '12px',
-          flexWrap: 'wrap'
-        }
+        style: { backgroundColor: '#0c1322', border: '1px solid rgba(0, 242, 254, 0.35)', borderRadius: '8px', padding: '14px 16px' }
       }, [
-        makeElement('div', { style: { flex: '1 1 280px' } }, [
-          makeElement('strong', { style: { color: '#f8fafc', fontSize: '13px', display: 'block', marginBottom: '3px' } }, s.title),
-          makeElement('div', { style: { color: '#94a3b8', fontSize: '12px', lineHeight: '1.45' } }, s.desc)
-        ]),
-        makeElement('button', { className: s.btnCls, onclick: s.action }, s.btnText)
+        makeElement('strong', { style: { color: '#00f2fe', fontSize: '13.5px', display: 'block', marginBottom: '6px' } }, '🔑 Giving Every Visitor the Keys to This Documentation'),
+        makeElement('p', { style: { fontSize: '13px', lineHeight: '1.6', color: '#cbd5e1', margin: 0 } },
+          'Whether you are a friend, technical collaborator, journalist, or legal counsel reviewing my record, you can export clean Markdown directly into ChatGPT, Claude, or Gemini to ask questions, verify claims, or help organize next steps.'
+        )
       ]));
-    });
 
-    const dlg = this._makeDialogBox('🔑 Keys to the System — Visitor & AI Export Guide', 680, 520, body);
-    return dlg;
-  }
+      let dlg = null;
 
+      const steps = [
+        {
+          title: '1. Copy Complete Multi-Domain AI Briefing',
+          desc: 'Compiles calm, factual summaries of Luno, HomeSetup, Career/AccuDraw, Financial Valuation, Family Status, and Economics into a single clipboard prompt.',
+          btnText: '📋 Copy Complete AI Briefing',
+          btnCls: 'pt-btn pt-btn-cyan',
+          action: async () => {
+            const sumJson = await PortalSummaryEngine.generateSummaries(null, {
+              includeSensitive: typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked()
+            });
+            const md = PortalSummaryEngine.buildVisitorAiBriefing(sumJson);
+            await navigator.clipboard.writeText(md);
+            alert('✓ Copied complete AI briefing to clipboard! Paste it into any AI assistant.');
+          }
+        },
+        {
+          title: '2. Run the Blind Unprimed Google Search Verification',
+          desc: 'Copies a neutral search prompt that never mentions Rob Brown\'s name, letting you verify the US Patent #5,754,182 attribution and Bentley Systems valuation independently.',
+          btnText: '🔎 Copy Unprimed Search Prompt',
+          btnCls: 'pt-btn pt-btn-amber',
+          action: async () => {
+            await navigator.clipboard.writeText(PortalData.getUnprimedVerificationPrompt());
+            alert('✓ Copied unprimed search prompt! Open an incognito window on Google or Gemini and paste it.');
+          }
+        },
+        {
+          title: '3. Open Integrated Document Reader & Export MD',
+          desc: 'Switches into full DocumentReader mode with SidePanel chapters, in-situ Aardvark element inspection, note attachment, and full Markdown export.',
+          btnText: '📖 Enter Document Mode',
+          btnCls: 'pt-btn pt-btn-emerald',
+          action: () => {
+            if (dlg) dlg.close();
+            if (portalApp) portalApp.openInDocumentReader('visitor_keys');
+          }
+        }
+      ];
+
+      steps.forEach(s => {
+        body.appendChild(makeElement('div', {
+          style: {
+            backgroundColor: '#070b14',
+            border: '1px solid #1e293b',
+            borderRadius: '8px',
+            padding: '12px 14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }
+        }, [
+          makeElement('div', { style: { flex: '1 1 280px' } }, [
+            makeElement('strong', { style: { color: '#f8fafc', fontSize: '13px', display: 'block', marginBottom: '3px' } }, s.title),
+            makeElement('div', { style: { color: '#94a3b8', fontSize: '12px', lineHeight: '1.45' } }, s.desc)
+          ]),
+          makeElement('button', { className: s.btnCls, onclick: s.action }, s.btnText)
+        ]));
+      });
+
+      dlg = this._makeDialogBox('🔑 Keys to the System — Visitor & AI Export Guide', 680, 520, body);
+      return dlg;
+    }
   static async openSummaryJsonDialog() {
     const body = makeElement('div', {
       style: { display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }
@@ -327,104 +334,104 @@ class PortalModals {
   }
 
   static openGuidedTourDialog(portalApp) {
-        let step = 0;
-        const steps = [
-          {
-            title: '1. Living Documents Built for People AND Large LLM Prompts',
-            accent: '#00f2fe',
-            body: 'This system is built on Luno—Rob’s primary code-generator and living-document initiative. Every area is readable as an interactive web app for family, financial, or technical reviewers, AND is engineered to export very large, structured prompts to ChatGPT, Claude, or Gemini to organize life, career direction, and software.',
-            actions: [
-              { label: '🌙 Open Luno Workspace ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('Luno') },
-              { label: '⚙️ Generate Live summaries.json', cls: 'pt-btn pt-btn-emerald', fn: () => PortalModals.openSummaryJsonDialog() }
-            ]
-          },
-          {
-            title: '2. CadPlan & AccuCAD: Agent-Ready Spec + Built-In 3D App',
-            accent: '#38bdf8',
-            body: 'Built on Rob’s US Patent #5,754,182 AccuDraw & SmartLine background, CadPlan is both an executable spec (with prose and code) and a live 3D CAD workspace embedded inside the document—explicitly designed so AI coding agents can insert AccuDraw into open-source AutoCAD & MicroStation clones (like Rust CADCraft).',
-            actions: [
-              { label: '📐 Open CadPlan (Spec + 3D App) ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('CadPlan') },
-              { label: '🚀 Launch AccuCAD 3D ↗', cls: 'pt-btn', url: PortalData.resolveAppUrl('accuCad') }
-            ]
-          },
-          {
-            title: '3. Kinetic Curve Studio & Public Economics Reading',
-            accent: '#c084fc',
-            body: 'The Kinetic Curve & Image Markup Studio makes social-media image annotation effortless using kinetic string-tether smoothing—and is cleanly modular so anyone can alter or extend it with Luno. Alongside it, Economics of Automation offers plain-English visual essays and simulators.',
-            actions: [
-              { label: '〰️ Open Kinetic Curve Studio ↗', cls: 'pt-btn pt-btn-purple', url: PortalData.resolveAppUrl('QuoraToys') },
-              { label: '🤖 Read Economics of Automation ↗', cls: 'pt-btn pt-btn-emerald', url: PortalData.resolveAppUrl('EconomicsOfAutomation') }
-            ]
-          },
-          {
-            title: '4. Verifiable Financial, Patent & Personal Records',
-            accent: '#f59e0b',
-            body: 'Every claim—from the $1.2B–$5.54B+ AccuDraw valuation attribution to Rob’s stabilized Nov 2026 personal and custody-prep context—can be exported as clean Markdown, inspected in-situ with Aardvark, or tested independently with a blind unprimed Google Search prompt.',
-            actions: [
-              { label: '🔑 Open Keys & AI Export', cls: 'pt-btn pt-btn-purple', fn: () => { dlg.close(); PortalModals.openVisitorKeysDialog(portalApp); } },
-              { label: '📊 View Valuation Model ↗', cls: 'pt-btn pt-btn-amber', url: PortalData.resolveAppUrl('ValuationOfAccudraw') }
-            ]
-          }
-        ];
+      let step = 0;
+      const steps = [
+        {
+          title: '1. Family Situation, Financial Record & Life\'s Work',
+          accent: '#f43f5e',
+          body: 'Portal is the front door to Rob\'s entire record—starting with his November 2026 stability in Chico while out of contact (not by choice) with his 94-year-old mother, his sister, and his 12-year-old daughter Stella in San Francisco, paired with his career/valuation record and active software work.',
+          actions: [
+            { label: '⚖️ Open Situation Document ↗', cls: 'pt-btn pt-btn-amber', url: PortalData.resolveAppUrl('situation') },
+            { label: '📊 Open Valuation Document ↗', cls: 'pt-btn pt-btn-emerald', url: PortalData.resolveAppUrl('ValuationOfAccudraw') }
+          ]
+        },
+        {
+          title: '2. For Visitors vs. For Rob (Why This System Exists)',
+          accent: '#00f2fe',
+          body: 'Visitors can read any document in the browser or copy a complete Markdown prompt into ChatGPT, Claude, or Gemini to ask questions. For Rob, keeping everything structured here helps counter executive dysfunction and paperwork avoidance (part of his Social Security disability context)—letting him load his full history into an AI without re-typing it so it can tell him the next concrete step, while using Luno to edit documents and code.',
+          actions: [
+            { label: '🔑 Open Keys & AI Export', cls: 'pt-btn pt-btn-cyan', fn: () => { dlg.close(); PortalModals.openVisitorKeysDialog(portalApp); } },
+            { label: '🌙 Open Luno Tool ↗', cls: 'pt-btn', url: PortalData.resolveAppUrl('Luno') }
+          ]
+        },
+        {
+          title: '3. CadPlan Document + Built-In 3D App & Curve App',
+          accent: '#38bdf8',
+          body: 'Built on Rob\'s US Patent #5,754,182 AccuDraw & SmartLine background, CadPlan pairs an executable CAD specification document with a live 3D WebGL app embedded inside so AI agents can insert AccuDraw into open-source AutoCAD & MicroStation clones. Alongside it, Kinetic Curve Studio is an easy social-media markup web app modifiable via Luno.',
+          actions: [
+            { label: '📐 Open CadPlan (Spec + 3D App) ↗', cls: 'pt-btn pt-btn-cyan', url: PortalData.resolveAppUrl('CadPlan') },
+            { label: '〰️ Open Curve App ↗', cls: 'pt-btn pt-btn-purple', url: PortalData.resolveAppUrl('QuoraToys') }
+          ]
+        },
+        {
+          title: '4. Master Opus Deep Archive & Blind Verification',
+          accent: '#a78bfa',
+          body: 'Master Opus unites all four quadrants (CAD inventions, personal/legal valuation, post-labor economics, and home fleet) with Tier 0–3 context routing and a 4-turn blind search verification stepper—plus every claim can be tested independently with an unprimed Google Search prompt.',
+          actions: [
+            { label: '🏛️ Open Master Opus Document ↗', cls: 'pt-btn pt-btn-purple', url: PortalData.resolveAppUrl('Opus') },
+            { label: '⚙️ Generate Live summaries.json', cls: 'pt-btn pt-btn-emerald', fn: () => PortalModals.openSummaryJsonDialog() }
+          ]
+        }
+      ];
 
-        const wrap = makeElement('div', {
-          style: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px', height: '100%' }
-        });
-        const stepHost = makeElement('div', { style: { flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' } });
-        const navFooter = makeElement('div', {
-          style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #1e293b' }
-        });
+      const wrap = makeElement('div', {
+        style: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px', height: '100%' }
+      });
+      const stepHost = makeElement('div', { style: { flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' } });
+      const navFooter = makeElement('div', {
+        style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #1e293b' }
+      });
 
-        const renderStep = () => {
-          const s = steps[step];
-          stepHost.innerHTML = '';
-          stepHost.appendChild(makeElement('div', {
-            style: { borderLeft: `4px solid ${s.accent}`, paddingLeft: '12px' }
-          }, [
-            makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: s.accent, fontWeight: 'bold' } }, `OVERVIEW ${step + 1} OF ${steps.length}`),
-            makeElement('h3', { style: { fontSize: '1.2rem', fontWeight: '800', color: '#f8fafc', margin: '4px 0 0 0' } }, s.title)
-          ]));
+      const renderStep = () => {
+        const s = steps[step];
+        stepHost.innerHTML = '';
+        stepHost.appendChild(makeElement('div', {
+          style: { borderLeft: `4px solid ${s.accent}`, paddingLeft: '12px' }
+        }, [
+          makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: s.accent, fontWeight: 'bold' } }, `OVERVIEW ${step + 1} OF ${steps.length}`),
+          makeElement('h3', { style: { fontSize: '1.2rem', fontWeight: '800', color: '#f8fafc', margin: '4px 0 0 0' } }, s.title)
+        ]));
 
-          stepHost.appendChild(makeElement('div', {
-            style: { backgroundColor: '#0c1322', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px 16px', fontSize: '13.5px', lineHeight: '1.65', color: '#cbd5e1' }
-          }, s.body));
+        stepHost.appendChild(makeElement('div', {
+          style: { backgroundColor: '#0c1322', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px 16px', fontSize: '13.5px', lineHeight: '1.65', color: '#cbd5e1' }
+        }, s.body));
 
-          stepHost.appendChild(makeElement('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
-            s.actions.map(a => a.url
-              ? makeElement('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', className: a.cls }, a.label)
-              : makeElement('button', { className: a.cls, onclick: a.fn }, a.label)
-            )
-          ));
+        stepHost.appendChild(makeElement('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+          s.actions.map(a => a.url
+            ? makeElement('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', className: a.cls }, a.label)
+            : makeElement('button', { className: a.cls, onclick: a.fn }, a.label)
+          )
+        ));
 
-          navFooter.innerHTML = '';
-          navFooter.append(
-            makeElement('button', {
-              className: 'pt-btn',
-              disabled: step === 0,
-              style: { opacity: step === 0 ? '0.45' : '1' },
-              onclick: () => { if (step > 0) { step--; renderStep(); } }
-            }, '◀ Previous'),
-            makeElement('div', { style: { display: 'flex', gap: '6px' } },
-              steps.map((_, i) => makeElement('span', {
-                style: {
-                  width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer',
-                  backgroundColor: i === step ? '#00f2fe' : '#334155',
-                  boxShadow: i === step ? '0 0 8px #00f2fe' : 'none'
-                },
-                onclick: () => { step = i; renderStep(); }
-              }))
-            ),
-            step < steps.length - 1
-              ? makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => { step++; renderStep(); } }, 'Next ▶')
-              : makeElement('button', { className: 'pt-btn pt-btn-emerald', onclick: () => dlg.close() }, '✓ Close Tour')
-          );
-        };
+        navFooter.innerHTML = '';
+        navFooter.append(
+          makeElement('button', {
+            className: 'pt-btn',
+            disabled: step === 0,
+            style: { opacity: step === 0 ? '0.45' : '1' },
+            onclick: () => { if (step > 0) { step--; renderStep(); } }
+          }, '◀ Previous'),
+          makeElement('div', { style: { display: 'flex', gap: '6px' } },
+            steps.map((_, i) => makeElement('span', {
+              style: {
+                width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer',
+                backgroundColor: i === step ? '#00f2fe' : '#334155',
+                boxShadow: i === step ? '0 0 8px #00f2fe' : 'none'
+              },
+              onclick: () => { step = i; renderStep(); }
+            }))
+          ),
+          step < steps.length - 1
+            ? makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => { step++; renderStep(); } }, 'Next ▶')
+            : makeElement('button', { className: 'pt-btn pt-btn-emerald', onclick: () => dlg.close() }, '✓ Close Tour')
+        );
+      };
 
-        wrap.append(stepHost, navFooter);
-        const dlg = this._makeDialogBox('✨ System Overview — Rob Brown’s Living Portal', 660, 410, wrap);
-        renderStep();
-        return dlg;
-      }
+      wrap.append(stepHost, navFooter);
+      const dlg = this._makeDialogBox('✨ System Overview — Rob Brown’s Living Portal', 660, 430, wrap);
+      renderStep();
+      return dlg;
+    }
 }
 
 globalThis.PortalModals = PortalModals;

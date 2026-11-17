@@ -10,44 +10,50 @@ class Portal {
   }
 
   async run(env) {
-        if (this.rootElement) this.destroy();
-        if (!env || !env.container) {
-          throw new Error('[Portal] run() requires an environment object with a valid container.');
-        }
-
-        if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {
-          DomBasics.run();
-        }
-
-        this.env = env;
-        this.rootElement = env.container;
-        globalThis._portalInstance = this;
-        globalThis._cadPlanInstance = this;
-
-        document.documentElement.style.overflowY = 'auto';
-        document.body.style.overflowY = 'auto';
-        this.rootElement.style.width = '100%';
-        this.rootElement.style.minHeight = '100vh';
-
-        const docPages = ['spear_drawing', 'spear_economics', 'spear_accucad', 'luno', 'homesetup', 'career', 'financial', 'family', 'economics', 'visitor_keys'];
-        const rawHash = (window.location.hash || '').replace(/^#\/?/, '').split('/')[0];
-        if (rawHash === 'doc' || docPages.includes(rawHash)) {
-          this.mode = 'document';
-          if (docPages.includes(rawHash)) this.pendingDocPageId = rawHash;
-        }
-
-        this.refresh();
-        return this;
+      if (this.rootElement) this.destroy();
+      if (!env || !env.container) {
+        throw new Error('[Portal] run() requires an environment object with a valid container.');
       }
-  refresh() {
-    if (!this.rootElement) return;
-    if (this.mode === 'document') {
-      this._renderDocumentMode();
-    } else {
-      this._renderFrontPageMode();
-    }
-  }
 
+      if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {
+        DomBasics.run();
+      }
+
+      this.env = env;
+      this.rootElement = env.container;
+      globalThis._portalInstance = this;
+      globalThis._cadPlanInstance = this;
+
+      document.documentElement.style.overflowY = 'auto';
+      document.body.style.overflowY = 'auto';
+      this.rootElement.style.width = '100%';
+      this.rootElement.style.minHeight = '100vh';
+
+      const route = this._getHashRoute();
+      if (route.mode === 'document') {
+        this.mode = 'document';
+        this.pendingDocPageId = route.pageId;
+        this.pendingAnchorId = route.anchorId;
+      } else {
+        this.mode = 'frontpage';
+      }
+
+      this._routeSyncHandler = () => this._syncFromUrl();
+      window.addEventListener('hashchange', this._routeSyncHandler);
+      window.addEventListener('popstate', this._routeSyncHandler);
+
+      await this.refresh();
+      return this;
+    }
+
+  async refresh() {
+      if (!this.rootElement) return;
+      if (this.mode === 'document') {
+        await this._renderDocumentMode();
+      } else {
+        this._renderFrontPageMode();
+      }
+    }
   _bindGlowTip(el, text, rgb = [0, 242, 254]) {
     if (!el || typeof GlowingTooltip === 'undefined') return;
     el.addEventListener('mouseenter', () => {
@@ -64,6 +70,7 @@ class Portal {
 
   _renderFrontPageMode() {
       this._teardownDocumentReader();
+      document.body.classList.remove('theme-dark', 'theme-blueprint', 'theme-phosphor');
       this.rootElement.innerHTML = '';
 
       const shell = makeElement('div', { className: 'pt-root' });
@@ -71,6 +78,7 @@ class Portal {
 
       const container = makeElement('main', { className: 'pt-container' });
       container.appendChild(this._buildHeroSection());
+      container.appendChild(this._buildEcosystemStrip());
       container.appendChild(this._buildQuickDoors());
       container.appendChild(this._buildChapterDirectory());
       container.appendChild(this._buildKeysBanner());
@@ -92,7 +100,6 @@ class Portal {
         this.aardvark.init();
       }
     }
-
   _buildTopBar() {
       const isUnlocked = typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked();
 
@@ -155,112 +162,123 @@ class Portal {
     }
 
   _buildHeroSection() {
-        const left = makeElement('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' } }, [
-          makeElement('div', {}, [
-            makeElement('div', { className: 'pt-kicker' }, 'Rob Brown • Living Specification System, Luno AI Cockpit & Public Record'),
-            makeElement('h1', { className: 'pt-hero-h1' }, 'Living Documents Built for People—and Large-Scale AI Collaboration.'),
-            makeElement('p', { className: 'pt-hero-p' },
-              'Every initiative here—my primary Luno code-generation & prompt workspace, the CadPlan 3D CAD specification & built-in AccuCAD app, the Kinetic Curve social-media markup studio, the Economics of Automation essay, and my patent, valuation, and personal stability records—shares a single living format. It is built so any reader can inspect my work directly, and just as importantly, export massive, structured prompts into ChatGPT, Claude, or Gemini to organize life, steer career strategy, and generate or modify software.'
-            )
-          ]),
-          makeElement('div', { className: 'pt-hero-keys-strip' }, [
-            makeElement('a', { href: PortalData.resolveAppUrl('CadPlan'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, '📐 CadPlan (Spec + 3D App) ↗'),
-            makeElement('a', { href: PortalData.resolveAppUrl('Luno'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '🌙 Luno AI Cockpit ↗'),
-            makeElement('a', { href: PortalData.resolveAppUrl('QuoraToys'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-purple' }, '〰️ Kinetic Curve Studio ↗'),
-            makeElement('a', { href: PortalData.resolveAppUrl('accuCad'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '🚀 AccuCAD 3D ↗'),
-            makeElement('a', { href: PortalData.resolveAppUrl('EconomicsOfAutomation'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-emerald' }, '🤖 Economics Essay ↗'),
-            makeElement('button', { className: 'pt-btn', onclick: () => PortalModals.openGuidedTourDialog(this) }, '✨ System Tour')
-          ])
-        ]);
-
-        const right = makeElement('div', { className: 'pt-constellation-box' }, [
-          makeElement('div', { className: 'pt-visual-tabs' }, [
-            makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '11px', fontWeight: '800', color: '#00f2fe' } }, '🕸️ Ecosystem Constellation Map'),
-            makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', color: '#94a3b8' } }, 'Click any node to inspect')
-          ]),
-          makeElement('div', { style: { flex: '1', display: 'flex', alignItems: 'center' } }, [
-            this._buildConstellationSvg()
-          ])
-        ]);
-
-        return makeElement('section', { className: 'pt-hero', 'data-block-id': 'portal_hero' }, [left, right]);
-      }
-
-  _buildConstellationSvg() {
-        const svg = makeElement('svg:svg', {
-          viewBox: '0 0 460 232',
-          width: '100%',
-          height: '216px',
-          style: { display: 'block' }
-        });
-
-        const defs = makeElement('svg:defs', {}, [
-          makeElement('svg:filter', { id: 'pt-glow' }, [
-            makeElement('svg:feGaussianBlur', { stdDeviation: '3', result: 'blur' }),
-            makeElement('svg:feMerge', {}, [
-              makeElement('svg:feMergeNode', { in: 'blur' }),
-              makeElement('svg:feMergeNode', { in: 'SourceGraphic' })
+      const left = makeElement('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' } }, [
+        makeElement('div', {}, [
+          makeElement('div', { className: 'pt-kicker' }, 'Rob Brown • Family Situation, Personal Record & Work (Updated Nov 2026)'),
+          makeElement('h1', { className: 'pt-hero-h1' }, 'Rob Brown: Family Situation, Financial Record & Life\'s Work.'),
+          makeElement('p', { className: 'pt-hero-p' },
+            'Everything in one place—starting with my current situation (housing stabilized in Chico as of November 2026, while remaining out of contact—not by my choice—with all of my blood relatives, including my 94-year-old mother, the sister I used to speak with regularly, and my 12-year-old daughter Stella in San Francisco). Carrying those twin separations at the same time weighed heavily enough to push me into an unstable mental-health crisis I nearly didn\'t survive. Alongside that is the documented record of my career—I have done very well in environments suited to my technical strengths (creating billions in value at Bentley Systems), while misaligned situations go poorly—and my active software and writing.'
+          ),
+          makeElement('div', { className: 'pt-hero-subnote' }, [
+            makeElement('div', { style: { marginBottom: '6px' } }, [
+              makeElement('strong', { style: { color: '#00f2fe' } }, 'For Visitors: '),
+              'Read any document directly here, or copy a single large prompt into ChatGPT, Claude, or Gemini so you can ask questions without reading everything manually.'
+            ]),
+            makeElement('div', {}, [
+              makeElement('strong', { style: { color: '#34d399' } }, 'Why I Built This (Stability & Next Steps): '),
+              'My mental health and stability come first. Executive dysfunction and avoiding overwhelming paperwork (such as leaving legal mail unopened during a breakdown, part of what my Social Security disability claim addresses) have gotten me into real trouble—so I keep everything organized here to load straight into an AI without re-explaining painful history, get clear next steps, and update documents or software via Luno.'
             ])
           ])
-        ]);
-        svg.appendChild(defs);
+        ]),
+        makeElement('div', { className: 'pt-hero-keys-strip' }, [
+          makeElement('a', { href: PortalData.resolveAppUrl('situation'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-amber' }, '⚖️ Situation Document ↗'),
+          makeElement('a', { href: PortalData.resolveAppUrl('ValuationOfAccudraw'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-emerald' }, '📊 Valuation Document ↗'),
+          makeElement('a', { href: PortalData.resolveAppUrl('Opus'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '🏛️ Master Opus Document ↗'),
+          makeElement('a', { href: PortalData.resolveAppUrl('Luno'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, '🌙 Luno Workspace ↗'),
+          makeElement('a', { href: PortalData.resolveAppUrl('CadPlan'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '📐 CadPlan (Spec + 3D) ↗'),
+          makeElement('a', { href: PortalData.resolveAppUrl('QuoraToys'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-purple' }, '〰️ Curve App ↗'),
+          makeElement('button', { className: 'pt-btn', onclick: () => PortalModals.openGuidedTourDialog(this) }, '✨ System Tour')
+        ])
+      ]);
 
-        const nodes = [
-          { id: 'cadplan_spec', x: 230, y: 20, label: '📐 CadPlan Spec', col: '#00f2fe' },
-          { id: 'curve_drawing_spear', x: 62, y: 36, label: '〰️ Curve Studio', col: '#c084fc' },
-          { id: 'luno', x: 398, y: 36, label: '🌙 Luno Core', col: '#00f2fe' },
-          { id: 'accucad_live', x: 60, y: 94, label: '🚀 AccuCAD 3D', col: '#38bdf8' },
-          { id: 'economics_spear', x: 400, y: 94, label: '🤖 Econ Essay', col: '#34d399' },
-          { id: 'career', x: 62, y: 152, label: '📜 Patents', col: '#60a5fa' },
-          { id: 'homesetup', x: 398, y: 152, label: '🖥️ HomeSetup', col: '#10b981' },
-          { id: 'financial', x: 132, y: 206, label: '📊 Valuation', col: '#f59e0b' },
-          { id: 'family', x: 328, y: 206, label: '⚖️ Family/Ctx', col: '#c084fc' }
-        ];
+      const right = makeElement('div', { className: 'pt-constellation-box' }, [
+        makeElement('div', { className: 'pt-visual-tabs' }, [
+          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '11px', fontWeight: '800', color: '#00f2fe' } }, '🕸️ Ecosystem Constellation Map'),
+          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', color: '#94a3b8' } }, 'Click any node to inspect')
+        ]),
+        makeElement('div', { style: { flex: '1', display: 'flex', alignItems: 'center' } }, [
+          this._buildConstellationSvg()
+        ])
+      ]);
 
-        const cx = 230, cy = 116;
-        nodes.forEach(n => {
-          svg.appendChild(makeElement('svg:line', {
-            x1: cx, y1: cy, x2: n.x, y2: n.y,
-            stroke: n.col, 'stroke-width': '1.4', 'stroke-dasharray': '4,3', opacity: '0.65'
-          }));
-        });
+      return makeElement('section', { className: 'pt-hero', 'data-block-id': 'portal_hero' }, [left, right]);
+    }
+  _buildConstellationSvg() {
+      const svg = makeElement('svg:svg', {
+        viewBox: '0 0 460 256',
+        width: '100%',
+        height: '234px',
+        style: { display: 'block' }
+      });
 
-        const centerG = makeElement('svg:g', { transform: `translate(${cx - 50}, ${cy - 18})`, style: { cursor: 'pointer' } });
-        centerG.appendChild(makeElement('svg:rect', {
-          width: '100', height: '36', rx: '18', fill: '#082f49', stroke: '#00f2fe', 'stroke-width': '1.6', filter: 'url(#pt-glow)'
+      const defs = makeElement('svg:defs', {}, [
+        makeElement('svg:filter', { id: 'pt-glow' }, [
+          makeElement('svg:feGaussianBlur', { stdDeviation: '3', result: 'blur' }),
+          makeElement('svg:feMerge', {}, [
+            makeElement('svg:feMergeNode', { in: 'blur' }),
+            makeElement('svg:feMergeNode', { in: 'SourceGraphic' })
+          ])
+        ])
+      ]);
+      svg.appendChild(defs);
+
+      const nodes = [
+        { id: 'cadplan_spec', x: 230, y: 20, label: '📐 CadPlan Spec', col: '#00f2fe' },
+        { id: 'curve_drawing_spear', x: 64, y: 38, label: '〰️ Curve Studio', col: '#c084fc' },
+        { id: 'luno', x: 396, y: 38, label: '🌙 Luno Core', col: '#00f2fe' },
+        { id: 'accucad_live', x: 60, y: 94, label: '🚀 AccuCAD 3D', col: '#38bdf8' },
+        { id: 'economics_spear', x: 400, y: 94, label: '🤖 Econ Essay', col: '#34d399' },
+        { id: 'career', x: 62, y: 152, label: '📜 Patents', col: '#60a5fa' },
+        { id: 'homesetup', x: 398, y: 152, label: '🖥️ HomeSetup', col: '#10b981' },
+        { id: 'financial', x: 84, y: 214, label: '📊 Valuation', col: '#f59e0b' },
+        { id: 'economics', x: 230, y: 234, label: '🏛️ Master Opus', col: '#a78bfa' },
+        { id: 'family', x: 376, y: 214, label: '⚖️ Family/Sit.', col: '#f43f5e' }
+      ];
+
+      const cx = 230, cy = 122;
+      nodes.forEach(n => {
+        svg.appendChild(makeElement('svg:line', {
+          x1: cx, y1: cy, x2: n.x, y2: n.y,
+          stroke: n.col, 'stroke-width': '1.4', 'stroke-dasharray': '4,3', opacity: '0.62'
         }));
-        centerG.appendChild(makeElement('svg:text', {
-          x: '50', y: '22', fill: '#00f2fe', 'font-family': 'monospace', 'font-size': '10', 'font-weight': 'bold', 'text-anchor': 'middle'
-        }, 'LUNO • PORTAL'));
-        centerG.onclick = () => PortalModals.openGuidedTourDialog(this);
-        svg.appendChild(centerG);
+      });
 
-        nodes.forEach(n => {
-          const g = makeElement('svg:g', { transform: `translate(${n.x - 56}, ${n.y - 13})`, style: { cursor: 'pointer' } });
-          g.appendChild(makeElement('svg:rect', {
-            width: '112', height: '26', rx: '7', fill: '#0b101b', stroke: n.col, 'stroke-width': '1.3'
-          }));
-          g.appendChild(makeElement('svg:text', {
-            x: '56', y: '17', fill: '#f8fafc', 'font-family': 'monospace', 'font-size': '9.5', 'font-weight': 'bold', 'text-anchor': 'middle'
-          }, n.label));
-          g.onclick = () => {
-            const pillar = PortalData.getPillars().find(p => p.id === n.id);
-            if (pillar) PortalModals.openPillarDialog(pillar, this);
-          };
-          svg.appendChild(g);
-        });
+      const centerG = makeElement('svg:g', { transform: `translate(${cx - 54}, ${cy - 18})`, className: 'pt-constellation-node' });
+      centerG.appendChild(makeElement('svg:rect', {
+        width: '108', height: '36', rx: '18', fill: '#082f49', stroke: '#00f2fe', 'stroke-width': '1.6', filter: 'url(#pt-glow)'
+      }));
+      centerG.appendChild(makeElement('svg:text', {
+        x: '54', y: '22', fill: '#00f2fe', 'font-family': 'monospace', 'font-size': '9.8', 'font-weight': 'bold', 'text-anchor': 'middle'
+      }, 'ROB • PORTAL'));
+      centerG.onclick = () => PortalModals.openGuidedTourDialog(this);
+      svg.appendChild(centerG);
 
-        return svg;
-      }
+      nodes.forEach(n => {
+        const g = makeElement('svg:g', { transform: `translate(${n.x - 56}, ${n.y - 13})`, className: 'pt-constellation-node' });
+        g.appendChild(makeElement('svg:rect', {
+          width: '112', height: '26', rx: '7', fill: '#0b101b', stroke: n.col, 'stroke-width': '1.3'
+        }));
+        g.appendChild(makeElement('svg:text', {
+          x: '56', y: '17', fill: '#f8fafc', 'font-family': 'monospace', 'font-size': '9.5', 'font-weight': 'bold', 'text-anchor': 'middle'
+        }, n.label));
+        g.onclick = () => {
+          const pillar = PortalData.getPillars().find(p => p.id === n.id);
+          if (pillar) PortalModals.openPillarDialog(pillar, this);
+        };
+        svg.appendChild(g);
+      });
+
+      return svg;
+    }
 
   _buildKeysBanner() {
       return makeElement('section', { className: 'pt-keys-panel', 'data-block-id': 'portal_keys_banner' }, [
         makeElement('div', { style: { flex: '1 1 460px' } }, [
-          makeElement('strong', { style: { color: '#34d399', fontFamily: 'var(--pt-mono)', fontSize: '12.5px', display: 'block', marginBottom: '4px' } },
-            '🧠 DUAL-PURPOSE LIVING DOCUMENTS: HUMAN CLARITY + LARGE-SCALE LLM PROMPTS'
+          makeElement('strong', { style: { color: '#34d399', fontFamily: 'var(--pt-mono)', fontSize: '12px', display: 'block', marginBottom: '4px' } },
+            '🧠 FOR VISITORS: PASTE INTO AN AI TO ASK QUESTIONS • FOR ROB: NO MORE PAPERWORK PARALYSIS'
           ),
-          makeElement('div', { style: { fontSize: '13px', color: '#cbd5e1', lineHeight: '1.55' } },
-            'Beyond reading in the browser, the core purpose of this living document architecture (built on my Luno code-generation system) is generating huge, structured prompts for ChatGPT, Claude, or Gemini—allowing me to organize my life, map my career direction, and let AI agents inspect, alter, or port software cleanly via `Export MD`, `Summary JSON`, and `Inspect`.'
+          makeElement('div', { style: { fontSize: '13px', color: '#cbd5e1', lineHeight: '1.58' } },
+            'Most items here are living web documents (a document subset inside the JavaScript/Luno system), alongside a few interactive apps. Visitors can click "Copy Full Briefing MD" or "Keys & AI Export" to paste a complete prompt into ChatGPT, Claude, or Gemini and ask questions directly. For me, having everything structured here prevents paperwork avoidance—letting me load my whole situation into an AI without re-typing stressful history so it can tell me the next step, while also using Luno to edit documents and software.'
           )
         ]),
         makeElement('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, [
@@ -271,7 +289,7 @@ class Portal {
                 includeSensitive: typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked()
               });
               const md = PortalSummaryEngine.buildVisitorAiBriefing(sumJson);
-              navigator.clipboard?.writeText(md).then(() => alert('✓ Copied full Markdown briefing to clipboard!'));
+              navigator.clipboard?.writeText(md).then(() => alert('✓ Copied full Markdown briefing to clipboard! Paste it into any AI to ask questions.'));
             }
           }, '📋 Copy Full Briefing MD'),
           makeElement('button', {
@@ -281,6 +299,7 @@ class Portal {
         ])
       ]);
     }
+
   _buildToolbar() {
       const categories = PortalData.getCategories();
 
@@ -288,7 +307,7 @@ class Portal {
         className: 'pt-search',
         type: 'text',
         value: this.searchQuery,
-        placeholder: '🔍 Filter initiatives, apps, patents, repos (e.g. AccuCAD, DrawingApp, Economics, Luno)...',
+        placeholder: '🔍 Filter documents, apps, patents, topics (e.g. Situation, Stella, Valuation, Curve, Luno)...',
         oninput: (e) => {
           this.searchQuery = e.target.value.toLowerCase().trim();
           const grid = document.getElementById('pt-pillars-grid');
@@ -367,7 +386,7 @@ class Portal {
           rel: 'noopener noreferrer',
           className: 'pt-btn',
           style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent }
-        }, `🚀 Open App ↗`),
+        }, p.openLabel || '📄 Open Document ↗'),
         makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
           makeElement('button', {
             className: 'pt-btn',
@@ -384,11 +403,18 @@ class Portal {
 
       return card;
     }
-  async openInDocumentReader(pageId = 'luno') {
-    this.mode = 'document';
-    this.pendingDocPageId = pageId;
-    await this._renderDocumentMode();
-  }
+  async openInDocumentReader(pageId = 'spear_drawing', updateUrl = true) {
+      if (this.mode === 'document' && this.reader) {
+        this.reader.switchPage(pageId, updateUrl);
+        return;
+      }
+      this.mode = 'document';
+      this.pendingDocPageId = pageId;
+      if (updateUrl) {
+        this._setUrlHash(pageId);
+      }
+      await this._renderDocumentMode();
+    }
 
   async _renderDocumentMode() {
       this._teardownDocumentReader();
@@ -431,9 +457,10 @@ class Portal {
 
       this.reader = new DocumentReader({
         container: this.rootElement,
-        brandTitle: 'Portal • Integrated Document View',
+        brandTitle: 'Portal • Document View',
         brandIcon: '🏛️',
         dossierId: 'Portal',
+        disableEmptyHashFallback: true,
         pages: sectionPages,
         itemNotes: globalThis.CadPlanItemNotes || null,
         itemNotesClass: globalThis.CadPlanItemNotes || null,
@@ -452,6 +479,33 @@ class Portal {
       };
 
       await this.reader.init();
+
+      if (this.reader.navBar) {
+        const leftNavGroup = this.reader.navBar.firstElementChild;
+        if (leftNavGroup) {
+          const backPortalBtn = makeElement('button', {
+            className: 'dr-nav-btn',
+            id: 'pt-doc-back-portal-btn',
+            title: 'Return to Portal Front Page',
+            style: {
+              padding: '5px 12px',
+              fontSize: '0.78rem',
+              fontWeight: '800',
+              color: '#070a13',
+              background: 'linear-gradient(135deg, #0284c7 0%, #00f2fe 100%)',
+              border: 'none',
+              borderRadius: '20px'
+            },
+            onclick: () => this.goToFrontPage(true)
+          }, '← Portal');
+          leftNavGroup.insertBefore(backPortalBtn, leftNavGroup.firstChild);
+
+          const brandEl = leftNavGroup.querySelector('.dr-brand');
+          if (brandEl) {
+            brandEl.onclick = () => this.goToFrontPage(true);
+          }
+        }
+      }
 
       if (typeof CadPlanAardvark !== 'undefined') {
         this.aardvark = new CadPlanAardvark({
@@ -472,7 +526,14 @@ class Portal {
       }
 
       this._renderDocNavBar(sectionPages);
+
+      if (this.pendingAnchorId) {
+        const anchor = this.pendingAnchorId;
+        this.pendingAnchorId = null;
+        setTimeout(() => this.reader?.highlightTarget(anchor), 250);
+      }
     }
+
   _populateDocSidePanel(pages) {
       if (!this.sidePanel) return;
       this.sidePanel.header.innerHTML = '';
@@ -488,8 +549,8 @@ class Portal {
       c.appendChild(makeElement('button', {
         className: 'pt-btn pt-btn-cyan',
         style: { width: '100%', justifyContent: 'center' },
-        onclick: () => { this.mode = 'frontpage'; this.refresh(); }
-      }, '🖥️ Front Page Interface'));
+        onclick: () => this.goToFrontPage(true)
+      }, '🖥️ ← Portal Front Page'));
 
       pages.forEach(p => {
         const isCur = this.reader && this.reader.currentPageId === p.id;
@@ -505,28 +566,43 @@ class Portal {
         }, p.title));
       });
     }
+
   _teardownDocumentReader() {
-    if (this.sidePanel) {
-      this.sidePanel.destroy();
-      this.sidePanel = null;
+      const navBar = document.getElementById('pt-doc-nav-bar');
+      if (navBar) navBar.remove();
+
+      if (this.sidePanel) {
+        this.sidePanel.destroy();
+        this.sidePanel = null;
+      }
+      if (typeof SidePanel !== 'undefined' && typeof SidePanel.updateGlobalSafeArea === 'function') {
+        SidePanel.updateGlobalSafeArea();
+      }
+      if (this.reader && typeof this.reader.destroy === 'function') {
+        try { this.reader.destroy(); } catch (e) {}
+        this.reader = null;
+      }
+      if (this.aardvark) {
+        this.aardvark.destroy();
+        this.aardvark = null;
+      }
     }
-    if (this.reader && typeof this.reader.destroy === 'function') {
-      try { this.reader.destroy(); } catch (e) {}
-      this.reader = null;
-    }
-  }
 
   destroy() {
-    this._teardownDocumentReader();
-    if (this.aardvark) {
-      this.aardvark.destroy();
-      this.aardvark = null;
+      if (this._routeSyncHandler) {
+        window.removeEventListener('hashchange', this._routeSyncHandler);
+        window.removeEventListener('popstate', this._routeSyncHandler);
+        this._routeSyncHandler = null;
+      }
+      this._teardownDocumentReader();
+      if (this.aardvark) {
+        this.aardvark.destroy();
+        this.aardvark = null;
+      }
+      if (globalThis._portalInstance === this) globalThis._portalInstance = null;
+      if (globalThis._cadPlanInstance === this) globalThis._cadPlanInstance = null;
+      this.rootElement = null;
     }
-    if (globalThis._portalInstance === this) globalThis._portalInstance = null;
-    if (globalThis._cadPlanInstance === this) globalThis._cadPlanInstance = null;
-    this.rootElement = null;
-  }
-
   _buildChapterDirectory() {
         const chapters = [
           { id: 'spear_drawing', num: '1', label: 'Kinetic Curve & Markup Studio', col: '#00f2fe' },
@@ -557,6 +633,7 @@ class Portal {
           )
         ]);
       }
+
   _renderDocNavBar(pages) {
       const existing = document.getElementById('pt-doc-nav-bar');
       if (existing) existing.remove();
@@ -576,74 +653,238 @@ class Portal {
         }, `${nextPage.title.split('.')[0]}. ▶`) : null,
         makeElement('button', {
           className: 'pt-btn pt-btn-cyan',
-          onclick: () => {
-            this.mode = 'frontpage';
-            this.refresh();
-          }
-        }, '🖥️ Front Page')
-      ]);
+          onclick: () => this.goToFrontPage(true)
+        }, '🖥️ ← Portal')
+      ].filter(Boolean));
       this.rootElement.appendChild(bar);
     }
-
   _buildLiveCurveToy() {
         return this._buildConstellationSvg();
       }
 
   _buildQuickDoors() {
-        const doors = [
-          {
-            title: '📐 CadPlan: Executable Spec + Built-In 3D App',
-            desc: 'Built on my AccuDraw & SmartLine heritage (US Patent #5,754,182). Combines full architecture prose, code, and live 3D WebGL viewports inside the document so AI agents can insert AccuDraw into open-source AutoCAD & MicroStation clones.',
-            col: '#00f2fe',
-            btnText: 'Open CadPlan (Spec + App) ↗',
-            url: PortalData.resolveAppUrl('CadPlan')
-          },
-          {
-            title: '🌙 Luno: Code Generator & LLM Prompt Engine',
-            desc: 'My primary initiative: turns living documents into very large, structured prompts for ChatGPT, Claude, or Gemini and compiles AI code patches directly into apps—powering both software creation and personal/career organization.',
-            col: '#38bdf8',
-            btnText: 'Open Luno Workspace ↗',
-            url: PortalData.resolveAppUrl('Luno')
-          },
-          {
-            title: '〰️ Kinetic Curve & Image Markup Studio',
-            desc: 'Easy visual markup for social media using kinetic string-tether smoothing, point pulling, and instant text callouts—plus modular code designed to be altered and customized effortlessly inside Luno.',
-            col: '#c084fc',
-            btnText: 'Launch Curve Studio ↗',
-            url: PortalData.resolveAppUrl('QuoraToys')
-          },
-          {
-            title: '🚀 AccuCAD 3D Workstation',
-            desc: 'Standalone Three.js 3D drafting app demonstrating the AccuDraw kinetic compass, direction cosines, and tentative snapping live in the browser as a clean reference for AI agents and CAD users.',
-            col: '#10b981',
-            btnText: 'Open AccuCAD 3D ↗',
-            url: PortalData.resolveAppUrl('accuCad')
-          }
-        ];
-
-        return makeElement('section', {
-          className: 'pt-doors-grid',
-          'data-block-id': 'portal_quick_doors',
-          style: { gridTemplateColumns: 'repeat(auto-fit, minmax(245px, 1fr))' }
+      const highlights = [
+        {
+          kicker: 'PERSONAL & FAMILY RECORD (NOV 2026)',
+          title: '⚖️ Family, Stella & Current Situation',
+          desc: 'Chico apartment & Social Security stabilized (Jack helped move; Don on email). Out of contact—not by choice—with all blood relatives (my 94-year-old mother, the sister I talked to regularly, and my 12-year-old daughter Stella in SF). Carrying both separations weighed heavily on my mental health. Bringing spring legal mail to therapy tomorrow; deeper June 2026 & custody records live in Situation.',
+          col: '#f43f5e',
+          primaryText: '📄 Open Situation Document ↗',
+          primaryUrl: PortalData.resolveAppUrl('situation'),
+          chapterId: 'family'
         },
-          doors.map(d => makeElement('div', {
-            className: 'pt-door-card',
-            style: { borderTop: `3px solid ${d.col}`, boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 14px ${d.col}12` }
+        {
+          kicker: 'VERIFIABLE ECONOMIC RECORD',
+          title: '📊 $1.2B–$5.54B+ Value Created vs. Reality',
+          desc: 'Unprimed Google Search & 4 independent AIs ($2.3B midpoint) attribute a massive share of Bentley Systems\' anti-churn moat to AccuDraw & SmartLine—showing how well I perform in the right technical environment, contrasted with my current financial reality.',
+          col: '#f59e0b',
+          primaryText: '📄 Open Valuation Document ↗',
+          primaryUrl: PortalData.resolveAppUrl('ValuationOfAccudraw'),
+          copyPrompt: true,
+          chapterId: 'financial'
+        },
+        {
+          kicker: 'PRIMARY ORGANIZING & CODE TOOL',
+          title: '🌙 Luno: Life Organization, AI Prompts & Code',
+          desc: 'My personal workspace for editing these living documents, building/modifying software, and compiling huge structured prompts—so I can load my situation into an AI without re-typing everything and get clear next steps despite executive dysfunction.',
+          col: '#00f2fe',
+          primaryText: '🚀 Open Luno Tool ↗',
+          primaryUrl: PortalData.resolveAppUrl('Luno'),
+          chapterId: 'luno'
+        },
+        {
+          kicker: 'CAREER & CAD HERITAGE (US #5,754,182)',
+          title: '📐 CadPlan Document + AccuCAD 3D App',
+          desc: 'Built on my AccuDraw & SmartLine inventions at Bentley Systems. Pairs an architectural specification document with a live 3D WebGL app embedded inside so AI agents can insert AccuDraw into open-source AutoCAD/MicroStation clones.',
+          col: '#38bdf8',
+          primaryText: '📐 Open Spec + 3D App ↗',
+          primaryUrl: PortalData.resolveAppUrl('CadPlan'),
+          secondaryText: '🚀 AccuCAD 3D App ↗',
+          secondaryUrl: PortalData.resolveAppUrl('accuCad'),
+          chapterId: 'spear_accucad'
+        },
+        {
+          kicker: 'INTERACTIVE APP & PUBLIC ESSAY',
+          title: '〰️ Kinetic Curve App & 🤖 Economics Document',
+          desc: 'An everyday social-media image markup app with 32px kinetic smoothing (modifiable via Luno), alongside the plain-English Economics of Automation visual essay and simulator on the Robot Dividend.',
+          col: '#c084fc',
+          primaryText: '🚀 Open Curve App ↗',
+          primaryUrl: PortalData.resolveAppUrl('QuoraToys'),
+          secondaryText: '📖 Read Econ Essay ↗',
+          secondaryUrl: PortalData.resolveAppUrl('EconomicsOfAutomation'),
+          chapterId: 'spear_drawing'
+        },
+        {
+          kicker: 'DEEP ARCHIVE & INFRASTRUCTURE',
+          title: '🏛️ Master Opus & 🖥️ HomeSetup Documents',
+          desc: 'Opus unites all 4 life quadrants with Tier 0–3 AI context depth and a 4-turn hallucination-to-truth stepper, backed by the HomeSetup fleet document covering the Mac Mini & Ubuntu Port 8080 setup.',
+          col: '#10b981',
+          primaryText: '📄 Open Master Opus ↗',
+          primaryUrl: PortalData.resolveAppUrl('Opus'),
+          secondaryText: '📄 HomeSetup Doc ↗',
+          secondaryUrl: PortalData.resolveAppUrl('HomeSetup'),
+          chapterId: 'economics'
+        }
+      ];
+
+      return makeElement('section', {
+        className: 'pt-highlights-wrap',
+        'data-block-id': 'portal_quick_doors'
+      }, [
+        makeElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' } }, [
+          makeElement('strong', { style: { fontFamily: 'var(--pt-mono)', fontSize: '12px', color: '#00f2fe', letterSpacing: '0.06em' } }, '⭐ IMPORTANT AT A GLANCE — SITUATION, RECORD & WORK'),
+          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: '#94a3b8' } }, 'Click 📖 Read Chapter (Back button returns here) or open any full document / app ↗')
+        ]),
+        makeElement('div', { className: 'pt-highlights-grid' },
+          highlights.map(h => makeElement('div', {
+            className: 'pt-highlight-card',
+            style: { borderTop: `3px solid ${h.col}`, boxShadow: `0 10px 26px rgba(0,0,0,0.45), 0 0 16px ${h.col}14` }
           }, [
             makeElement('div', {}, [
-              makeElement('strong', { style: { color: '#f8fafc', fontSize: '13.5px', display: 'block', marginBottom: '4px' } }, d.title),
-              makeElement('div', { style: { fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5' } }, d.desc)
+              makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '9.5px', fontWeight: '800', color: h.col, letterSpacing: '0.08em', display: 'block', marginBottom: '4px' } }, h.kicker),
+              makeElement('strong', { style: { color: '#f8fafc', fontSize: '14px', display: 'block', marginBottom: '6px', lineHeight: '1.3' } }, h.title),
+              makeElement('div', { style: { fontSize: '12.5px', color: '#cbd5e1', lineHeight: '1.52' } }, h.desc)
             ]),
-            makeElement('a', {
-              href: d.url,
-              target: '_blank',
-              rel: 'noopener noreferrer',
-              className: 'pt-btn',
-              style: { alignSelf: 'flex-start', borderColor: `${d.col}66`, color: d.col }
-            }, d.btnText)
+            makeElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '8px', borderTop: '1px solid #1a2333' } }, [
+              makeElement('a', {
+                href: h.primaryUrl,
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                className: 'pt-btn',
+                style: { fontSize: '11px', padding: '5px 10px', borderColor: `${h.col}77`, color: pOrHColor(h.col) }
+              }, h.primaryText),
+              h.secondaryUrl ? makeElement('a', {
+                href: h.secondaryUrl,
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                className: 'pt-btn',
+                style: { fontSize: '11px', padding: '5px 10px' }
+              }, h.secondaryText) : null,
+              h.copyPrompt ? makeElement('button', {
+                className: 'pt-btn pt-btn-amber',
+                style: { fontSize: '11px', padding: '5px 10px' },
+                onclick: () => navigator.clipboard?.writeText(PortalData.getUnprimedVerificationPrompt()).then(() => alert('✓ Copied blind verification prompt! Paste it into incognito Google Search or Gemini.'))
+              }, '🔎 Copy Blind Test') : null,
+              makeElement('button', {
+                className: 'pt-btn',
+                style: { fontSize: '11px', padding: '5px 10px' },
+                onclick: () => this.openInDocumentReader(h.chapterId)
+              }, '📖 Read Chapter')
+            ].filter(Boolean))
           ]))
-        );
+        )
+      ]);
+
+      function pOrHColor(c) { return c; }
+    }
+  _getHashRoute() {
+      const docPages = ['spear_drawing', 'spear_economics', 'spear_accucad', 'luno', 'homesetup', 'career', 'financial', 'family', 'economics', 'visitor_keys'];
+      const rawHash = (window.location.hash || '').replace(/^#\/?/, '');
+      if (!rawHash || rawHash === 'frontpage') {
+        return { mode: 'frontpage', pageId: null, anchorId: null };
       }
+      const parts = rawHash.split('/').filter(Boolean);
+      const first = parts[0] || '';
+      if (first === 'doc') {
+        const p = docPages.includes(parts[1]) ? parts[1] : 'spear_drawing';
+        return { mode: 'document', pageId: p, anchorId: parts[2] || null };
+      }
+      if (docPages.includes(first)) {
+        return { mode: 'document', pageId: first, anchorId: parts[1] || null };
+      }
+      return { mode: 'frontpage', pageId: null, anchorId: null };
+    }
+
+  _setUrlHash(pageId = '') {
+      const targetHash = pageId ? `#${pageId}` : '';
+      const curHash = window.location.hash || '';
+      if (targetHash === '' && (curHash === '' || curHash === '#' || curHash === '#/' || curHash === '#frontpage')) {
+        return;
+      }
+      if (targetHash && curHash === targetHash) {
+        return;
+      }
+
+      try {
+        if (window.location.protocol !== 'about:' && window.history && typeof window.history.pushState === 'function') {
+          const nextUrl = targetHash || (window.location.pathname + window.location.search);
+          window.history.pushState({ portalMode: pageId ? 'document' : 'frontpage', pageId: pageId || null }, '', nextUrl);
+        } else {
+          window.location.hash = targetHash || '#frontpage';
+        }
+      } catch (e) {
+        try { window.location.hash = targetHash || '#frontpage'; } catch (err) {}
+      }
+    }
+
+  async _syncFromUrl() {
+      if (this._isSyncingRoute || !this.rootElement) return;
+      this._isSyncingRoute = true;
+      try {
+        const route = this._getHashRoute();
+        if (route.mode === 'frontpage') {
+          if (this.mode !== 'frontpage') {
+            this.mode = 'frontpage';
+            this.pendingDocPageId = null;
+            this.pendingAnchorId = null;
+            await this.refresh();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else {
+          if (this.mode !== 'document') {
+            this.pendingAnchorId = route.anchorId || null;
+            await this.openInDocumentReader(route.pageId, false);
+          } else if (this.reader) {
+            if (this.reader.currentPageId !== route.pageId) {
+              this.reader.switchPage(route.pageId, false);
+            }
+            if (route.anchorId) {
+              setTimeout(() => this.reader?.highlightTarget(route.anchorId), 200);
+            }
+          }
+        }
+      } finally {
+        this._isSyncingRoute = false;
+      }
+    }
+
+  async goToFrontPage(updateUrl = true) {
+      this.mode = 'frontpage';
+      this.pendingDocPageId = null;
+      this.pendingAnchorId = null;
+      if (updateUrl) {
+        this._setUrlHash('');
+      }
+      await this.refresh();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+  _buildEcosystemStrip() {
+      const items = [
+        {
+          badge: '🌐 PORTAL (HERE)',
+          col: '#00f2fe',
+          text: 'Clean public front door calling out every pillar, blind valuation test, and 10 readable chapters.'
+        },
+        {
+          badge: '🏛️ MASTER OPUS',
+          col: '#a78bfa',
+          text: 'Deep 4-quadrant knowledge router (Tiers 0–3), 4-turn AI verification stepper, and cross-repo file viewer.'
+        },
+        {
+          badge: '⚖️ SITUATION DOSSIER',
+          col: '#f59e0b',
+          text: 'Detailed personal & family record: Nov 2026 Chico stability, Stella court prep, June 2026 context, and gated family/mother-contact exhibits.'
+        }
+      ];
+
+      return makeElement('section', { className: 'pt-ecosystem-strip', 'data-block-id': 'portal_ecosystem_roles' },
+        items.map(it => makeElement('div', { className: 'pt-eco-pill', style: { borderLeft: `3px solid ${it.col}` } }, [
+          makeElement('strong', { style: { fontFamily: 'var(--pt-mono)', fontSize: '11px', color: it.col, display: 'block', marginBottom: '2px' } }, it.badge),
+          makeElement('span', { style: { fontSize: '12px', color: '#cbd5e1', lineHeight: '1.45' } }, it.text)
+        ]))
+      );
+    }
 }
 
 globalThis.Portal = Portal;

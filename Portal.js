@@ -19,8 +19,19 @@ class Portal {
         DomBasics.run();
       }
 
+      if (typeof LunoLoader !== 'undefined') {
+        if (typeof LunoLoader.ensureCommentsLoaded === 'function') {
+          try { await LunoLoader.ensureCommentsLoaded(); } catch (e) {}
+        }
+        if (typeof LunoLoader.ensurePartialEngineLoaded === 'function') {
+          try { await LunoLoader.ensurePartialEngineLoaded(); } catch (e) {}
+        }
+      }
+
       this.env = env;
       this.rootElement = env.container;
+      this.activeInPlaceApp = null;
+      this.activeInPlaceProject = null;
       globalThis._portalInstance = this;
       globalThis._cadPlanInstance = this;
 
@@ -30,13 +41,10 @@ class Portal {
       this.rootElement.style.minHeight = '100vh';
 
       const route = this._getHashRoute();
-      if (route.mode === 'document') {
-        this.mode = 'document';
-        this.pendingDocPageId = route.pageId;
-        this.pendingAnchorId = route.anchorId;
-      } else {
-        this.mode = 'frontpage';
-      }
+      this.mode = route.mode;
+      this.pendingDocPageId = route.pageId;
+      this.pendingAnchorId = route.anchorId;
+      this.pendingProjectName = route.projectName;
 
       this._routeSyncHandler = () => this._syncFromUrl();
       window.addEventListener('hashchange', this._routeSyncHandler);
@@ -50,6 +58,10 @@ class Portal {
       if (!this.rootElement) return;
       if (this.mode === 'document') {
         await this._renderDocumentMode();
+      } else if (this.mode === 'composed') {
+        await this._renderComposedPageMode();
+      } else if (this.mode === 'project' && this.pendingProjectName) {
+        await this._renderInPlaceProject(this.pendingProjectName, this.pendingDocPageId, this.pendingAnchorId);
       } else {
         this._renderFrontPageMode();
       }
@@ -69,39 +81,74 @@ class Portal {
   }
 
   _renderFrontPageMode() {
-      this._teardownDocumentReader();
-      document.body.classList.remove('theme-dark', 'theme-blueprint', 'theme-phosphor');
-      this.rootElement.innerHTML = '';
+        this._teardownActiveSubView();
+        document.body.classList.remove('theme-dark', 'theme-blueprint', 'theme-phosphor');
+        this.rootElement.innerHTML = '';
 
-      const shell = makeElement('div', { className: 'pt-root' });
-      shell.appendChild(this._buildTopBar());
+        const shell = makeElement('div', { className: 'pt-root' });
+        shell.appendChild(this._buildTopBar());
 
-      const container = makeElement('main', { className: 'pt-container' });
-      container.appendChild(this._buildHeroSection());
-      container.appendChild(this._buildEcosystemStrip());
-      container.appendChild(this._buildQuickDoors());
-      container.appendChild(this._buildChapterDirectory());
-      container.appendChild(this._buildKeysBanner());
-      container.appendChild(this._buildToolbar());
+        const container = makeElement('main', { className: 'pt-container' });
+        container.appendChild(this._buildHeroSection());
 
-      const grid = makeElement('div', { className: 'pt-grid', id: 'pt-pillars-grid' });
-      this._populateGrid(grid);
-      container.appendChild(grid);
+        const builderMount = makeElement('div', { id: 'pt-selective-builder-mount' });
+        container.appendChild(builderMount);
 
-      shell.appendChild(container);
-      this.rootElement.appendChild(shell);
+        container.appendChild(this._buildEcosystemStrip());
+        container.appendChild(this._buildQuickDoors());
+        container.appendChild(this._buildChapterDirectory());
+        container.appendChild(this._buildKeysBanner());
+        container.appendChild(this._buildToolbar());
 
-      if (typeof CadPlanAardvark !== 'undefined' && !this.aardvark) {
-        this.aardvark = new CadPlanAardvark({
-          container: this.rootElement,
-          dossierId: 'Portal',
-          documentReader: null
-        });
-        this.aardvark.init();
+        const grid = makeElement('div', { className: 'pt-grid', id: 'pt-pillars-grid' });
+        this._populateGrid(grid);
+        container.appendChild(grid);
+
+        shell.appendChild(container);
+        this.rootElement.appendChild(shell);
+
+        if (typeof PortalPromptBuilder !== 'undefined') {
+          PortalPromptBuilder.render(builderMount, this);
+        }
+
+        if (typeof CadPlanAardvark !== 'undefined' && !this.aardvark) {
+          this.aardvark = new CadPlanAardvark({
+            container: this.rootElement,
+            dossierId: 'Portal',
+            documentReader: null
+          });
+          this.aardvark.init();
+        }
+
+        const attachOverlay = () => {
+          if (typeof UniversalCommentsOverlay !== 'undefined' && shell.isConnected) {
+            UniversalCommentsOverlay.attach(shell, { dossierId: 'Portal', pageId: 'frontpage' });
+          }
+        };
+        if (typeof UniversalCommentsOverlay !== 'undefined') {
+          attachOverlay();
+        } else if (typeof LunoLoader !== 'undefined' && typeof LunoLoader.ensureCommentsLoaded === 'function') {
+          LunoLoader.ensureCommentsLoaded().then(attachOverlay).catch(() => {});
+        }
       }
-    }
   _buildTopBar() {
       const isUnlocked = typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked();
+
+      const btnComposed = makeElement('button', {
+        className: 'pt-btn pt-btn-emerald',
+        onclick: () => this.openComposedPage()
+      }, '🧩 Composed Page');
+      this._bindGlowTip(btnComposed, 'Read your selected multi-document partial slices as one unified living page');
+
+      const btnHub = makeElement('button', {
+        className: 'pt-btn pt-btn-purple',
+        onclick: () => {
+          if (typeof DocumentReader !== 'undefined' && typeof DocumentReader.openCommentsHub === 'function') {
+            DocumentReader.openCommentsHub({ dossierId: null });
+          }
+        }
+      }, '💬 Comments Hub');
+      this._bindGlowTip(btnHub, 'Browse, resolve, and combine comments across all documents');
 
       const btnTour = makeElement('button', {
         className: 'pt-btn pt-btn-cyan',
@@ -116,7 +163,7 @@ class Portal {
       this._bindGlowTip(btnKeys, 'Export clean Markdown & learn how to query this whole archive with any AI');
 
       const btnJson = makeElement('button', {
-        className: 'pt-btn pt-btn-emerald',
+        className: 'pt-btn',
         onclick: () => PortalModals.openSummaryJsonDialog()
       }, '⚙️ Summary JSON');
       this._bindGlowTip(btnJson, 'Scan live project files and generate a structured summaries.json bundle');
@@ -155,122 +202,287 @@ class Portal {
         makeElement('div', { className: 'pt-brand', onclick: () => { this.activeCategory = 'all'; this.searchQuery = ''; this.refresh(); } }, [
           makeElement('span', { className: 'pt-brand-dot' }),
           makeElement('span', { className: 'pt-brand-title' }, 'ROB BROWN • LIVING PORTAL'),
-          makeElement('span', { className: 'pt-brand-sub' }, 'Portal v1.1')
+          makeElement('span', { className: 'pt-brand-sub' }, 'Portal v2.0 SPA')
         ]),
-        makeElement('div', { className: 'pt-actions' }, [btnTour, btnKeys, btnJson, btnDoc, btnInspect, btnGate])
+        makeElement('div', { className: 'pt-actions' }, [btnComposed, btnHub, btnTour, btnKeys, btnJson, btnDoc, btnInspect, btnGate])
       ]);
     }
 
   _buildHeroSection() {
-      const left = makeElement('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' } }, [
-        makeElement('div', {}, [
-          makeElement('div', { className: 'pt-kicker' }, 'Rob Brown • Family Situation, Personal Record & Work (Updated Nov 2026)'),
-          makeElement('h1', { className: 'pt-hero-h1' }, 'Rob Brown: Family Situation, Financial Record & Life\'s Work.'),
-          makeElement('p', { className: 'pt-hero-p' },
-            'Everything in one place—starting with my current situation (housing stabilized in Chico as of November 2026, while remaining out of contact—not by my choice—with all of my blood relatives, including my 94-year-old mother, the sister I used to speak with regularly, and my 12-year-old daughter Stella in San Francisco). Carrying those twin separations at the same time weighed heavily enough to push me into an unstable mental-health crisis I nearly didn\'t survive. Alongside that is the documented record of my career—I have done very well in environments suited to my technical strengths (creating billions in value at Bentley Systems), while misaligned situations go poorly—and my active software and writing.'
-          ),
-          makeElement('div', { className: 'pt-hero-subnote' }, [
-            makeElement('div', { style: { marginBottom: '6px' } }, [
-              makeElement('strong', { style: { color: '#00f2fe' } }, 'For Visitors: '),
-              'Read any document directly here, or copy a single large prompt into ChatGPT, Claude, or Gemini so you can ask questions without reading everything manually.'
-            ]),
-            makeElement('div', {}, [
-              makeElement('strong', { style: { color: '#34d399' } }, 'Why I Built This (Stability & Next Steps): '),
-              'My mental health and stability come first. Executive dysfunction and avoiding overwhelming paperwork (such as leaving legal mail unopened during a breakdown, part of what my Social Security disability claim addresses) have gotten me into real trouble—so I keep everything organized here to load straight into an AI without re-explaining painful history, get clear next steps, and update documents or software via Luno.'
+        const openAppBtn = (proj, cls, label) => makeElement('button', {
+          className: cls,
+          onclick: () => this.openProjectInPlace(proj)
+        }, label);
+
+        const left = makeElement('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' } }, [
+          makeElement('div', {}, [
+            makeElement('div', { className: 'pt-kicker' }, 'Rob Brown • Family Situation, Personal Record & Work (Updated Nov 2026)'),
+            makeElement('h1', { className: 'pt-hero-h1' }, 'Rob Brown: Family Situation, Financial Record & Life\'s Work.'),
+            makeElement('p', { className: 'pt-hero-p' },
+              'Everything in one place—starting with my current situation (housing stabilized in Chico as of November 2026, while remaining out of contact—not by my choice—with all of my blood relatives, including my 94-year-old mother, the sister I used to speak with regularly, and my 12-year-old daughter Stella in San Francisco). Carrying those twin separations at the same time weighed heavily enough to push me into an unstable mental-health crisis I nearly didn\'t survive. Alongside that is the documented record of my career—I have done very well in environments suited to my technical strengths (creating billions in value at Bentley Systems), while misaligned situations go poorly—and my active software and writing.'
+            ),
+            makeElement('div', { className: 'pt-hero-subnote' }, [
+              makeElement('div', { style: { marginBottom: '6px' } }, [
+                makeElement('strong', { style: { color: '#00f2fe' } }, 'True Single-Page App + Partial Pages: '),
+                'Open any document right inside Portal in-place (keeping your comments, navigation, and partial selections intact), or click nodes on the constellation ring to inspect them in the tree builder below.'
+              ]),
+              makeElement('div', {}, [
+                makeElement('strong', { style: { color: '#34d399' } }, 'Why I Built This (Stability & Next Steps): '),
+                'My mental health and stability come first. Executive dysfunction and avoiding overwhelming paperwork (such as leaving legal mail unopened during a breakdown, part of what my Social Security disability claim addresses) have gotten me into real trouble—so I keep everything organized here to load straight into an AI without re-explaining painful history, get clear next steps, and update documents or software via Luno.'
+              ])
+            ])
+          ]),
+          makeElement('div', { className: 'pt-hero-keys-strip' }, [
+            openAppBtn('situation', 'pt-btn pt-btn-amber', '⚖️ Situation Document'),
+            openAppBtn('ValuationOfAccudraw', 'pt-btn pt-btn-emerald', '📊 Valuation Document'),
+            openAppBtn('Opus', 'pt-btn', '🏛️ Master Opus Document'),
+            openAppBtn('CadPlan', 'pt-btn', '📐 CadPlan (Spec + 3D)'),
+            openAppBtn('EconomicsOfAutomation', 'pt-btn pt-btn-emerald', '🤖 Economics Essay'),
+            openAppBtn('QuoraToys', 'pt-btn pt-btn-purple', '〰️ Curve App'),
+            makeElement('a', { href: PortalData.resolveAppUrl('Luno'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, '🌙 Luno Workspace ↗')
+          ])
+        ]);
+
+        const constellationMount = makeElement('div', {
+          id: 'pt-constellation-mount',
+          style: { flex: '1', width: '100%', display: 'flex', alignItems: 'center' }
+        });
+
+        const statusLegend = makeElement('div', {
+          id: 'pt-constellation-legend',
+          style: {
+            borderTop: '1px solid #151f30',
+            paddingTop: '7px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '6px',
+            fontFamily: 'var(--pt-mono)',
+            fontSize: '10px',
+            color: '#94a3b8'
+          }
+        }, [
+          makeElement('span', {}, 'Node = jump to Tree below • [+] pill = cycle Off/Sum/Core/Full')
+        ]);
+
+        const refreshConstellation = (force = false) => {
+          if (!force && !constellationMount.isConnected) return;
+          constellationMount.innerHTML = '';
+          constellationMount.appendChild(this._buildConstellationSvg());
+        };
+
+        const right = makeElement('div', { className: 'pt-constellation-box', 'data-uco-ignore': 'true' }, [
+          makeElement('div', { className: 'pt-visual-tabs' }, [
+            makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '11px', fontWeight: '800', color: '#00f2fe' } }, '🕸️ Ecosystem Constellation Ring'),
+            makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', color: '#94a3b8' } }, '12 Connected Projects')
+          ]),
+          constellationMount,
+          statusLegend
+        ]);
+
+        refreshConstellation(true);
+        if (typeof PartialDocumentEngine !== 'undefined') {
+          if (this._unsubConstellationPartial) this._unsubConstellationPartial();
+          this._unsubConstellationPartial = PartialDocumentEngine.subscribe(() => refreshConstellation(false));
+        }
+        if (typeof MockServerAPI !== 'undefined') {
+          if (this._unsubConstellationComments) this._unsubConstellationComments();
+          this._unsubConstellationComments = MockServerAPI.subscribe(() => refreshConstellation(false));
+        }
+
+        return makeElement('section', { className: 'pt-hero', 'data-block-id': 'portal_hero' }, [left, right]);
+      }
+  _buildConstellationSvg() {
+        const svg = makeElement('svg:svg', {
+          viewBox: '0 0 480 280',
+          width: '100%',
+          height: '252px',
+          style: { display: 'block' },
+          'data-uco-ignore': 'true'
+        });
+
+        const defs = makeElement('svg:defs', {}, [
+          makeElement('svg:filter', { id: 'pt-glow' }, [
+            makeElement('svg:feGaussianBlur', { stdDeviation: '3', result: 'blur' }),
+            makeElement('svg:feMerge', {}, [
+              makeElement('svg:feMergeNode', { in: 'blur' }),
+              makeElement('svg:feMergeNode', { in: 'SourceGraphic' })
             ])
           ])
-        ]),
-        makeElement('div', { className: 'pt-hero-keys-strip' }, [
-          makeElement('a', { href: PortalData.resolveAppUrl('situation'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-amber' }, '⚖️ Situation Document ↗'),
-          makeElement('a', { href: PortalData.resolveAppUrl('ValuationOfAccudraw'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-emerald' }, '📊 Valuation Document ↗'),
-          makeElement('a', { href: PortalData.resolveAppUrl('Opus'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '🏛️ Master Opus Document ↗'),
-          makeElement('a', { href: PortalData.resolveAppUrl('Luno'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, '🌙 Luno Workspace ↗'),
-          makeElement('a', { href: PortalData.resolveAppUrl('CadPlan'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '📐 CadPlan (Spec + 3D) ↗'),
-          makeElement('a', { href: PortalData.resolveAppUrl('QuoraToys'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-purple' }, '〰️ Curve App ↗'),
-          makeElement('button', { className: 'pt-btn', onclick: () => PortalModals.openGuidedTourDialog(this) }, '✨ System Tour')
-        ])
-      ]);
+        ]);
+        svg.appendChild(defs);
 
-      const right = makeElement('div', { className: 'pt-constellation-box' }, [
-        makeElement('div', { className: 'pt-visual-tabs' }, [
-          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '11px', fontWeight: '800', color: '#00f2fe' } }, '🕸️ Ecosystem Constellation Map'),
-          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', color: '#94a3b8' } }, 'Click any node to inspect')
-        ]),
-        makeElement('div', { style: { flex: '1', display: 'flex', alignItems: 'center' } }, [
-          this._buildConstellationSvg()
-        ])
-      ]);
+        const comp = typeof PartialDocumentEngine !== 'undefined' ? PartialDocumentEngine.getActiveComposition() : null;
+        const catalog = typeof PortalContentExtractor !== 'undefined' ? PortalContentExtractor.getCatalog() : [];
+        const docModes = comp?.docModes || {};
 
-      return makeElement('section', { className: 'pt-hero', 'data-block-id': 'portal_hero' }, [left, right]);
-    }
-  _buildConstellationSvg() {
-      const svg = makeElement('svg:svg', {
-        viewBox: '0 0 460 256',
-        width: '100%',
-        height: '234px',
-        style: { display: 'block' }
-      });
+        const cmtCounts = this._constellationCommentCounts || {};
+        if (typeof MockServerAPI !== 'undefined' && !this._constellationCountsLoading) {
+          this._constellationCountsLoading = true;
+          MockServerAPI.getSharedInstance().getAllThreadsSummary(null).then(threads => {
+            const next = {};
+            threads.filter(t => t.status !== 'resolved').forEach(t => {
+              next[t.dossierId] = (next[t.dossierId] || 0) + t.commentCount;
+            });
+            this._constellationCommentCounts = next;
+            this._constellationCountsLoading = false;
+            const mount = document.getElementById('pt-constellation-mount');
+            if (mount && JSON.stringify(next) !== JSON.stringify(cmtCounts)) {
+              mount.innerHTML = '';
+              mount.appendChild(this._buildConstellationSvg());
+            }
+          }).catch(() => { this._constellationCountsLoading = false; });
+        }
 
-      const defs = makeElement('svg:defs', {}, [
-        makeElement('svg:filter', { id: 'pt-glow' }, [
-          makeElement('svg:feGaussianBlur', { stdDeviation: '3', result: 'blur' }),
-          makeElement('svg:feMerge', {}, [
-            makeElement('svg:feMergeNode', { in: 'blur' }),
-            makeElement('svg:feMergeNode', { in: 'SourceGraphic' })
-          ])
-        ])
-      ]);
-      svg.appendChild(defs);
+        const nodes = [
+          { id: 'cadplan_spec', docId: 'CadPlan', x: 240, y: 20, label: '📐 CadPlan', col: '#00f2fe' },
+          { id: 'curve_drawing_spear', docId: 'QuoraToys', x: 68, y: 58, label: '〰️ Curve Studio', col: '#c084fc' },
+          { id: 'luno', docId: null, x: 412, y: 58, label: '🌙 Luno Core', col: '#00f2fe' },
+          { id: 'accucad_live', docId: 'accuCad', x: 64, y: 98, label: '🚀 AccuCAD 3D', col: '#38bdf8' },
+          { id: 'economics_spear', docId: 'EconomicsOfAutomation', x: 416, y: 98, label: '🤖 Econ Essay', col: '#34d399' },
+          { id: 'career', docId: 'accudraw', x: 64, y: 140, label: '📜 Patents', col: '#60a5fa' },
+          { id: 'homesetup', docId: 'HomeSetup', x: 416, y: 140, label: '🖥️ HomeSetup', col: '#10b981' },
+          { id: 'jobs_ai', docId: 'JobsAndAI', x: 68, y: 182, label: '📈 Jobs & AI', col: '#fb923c' },
+          { id: 'comments_sys', docId: 'Comments', x: 412, y: 182, label: '💬 Comments', col: '#38bdf8' },
+          { id: 'financial', docId: 'ValuationOfAccudraw', x: 104, y: 222, label: '📊 Valuation', col: '#f59e0b' },
+          { id: 'family', docId: 'situation', x: 376, y: 222, label: '⚖️ Situation', col: '#f43f5e' },
+          { id: 'economics', docId: 'Opus', x: 240, y: 260, label: '🏛️ Master Opus', col: '#a78bfa' }
+        ];
 
-      const nodes = [
-        { id: 'cadplan_spec', x: 230, y: 20, label: '📐 CadPlan Spec', col: '#00f2fe' },
-        { id: 'curve_drawing_spear', x: 64, y: 38, label: '〰️ Curve Studio', col: '#c084fc' },
-        { id: 'luno', x: 396, y: 38, label: '🌙 Luno Core', col: '#00f2fe' },
-        { id: 'accucad_live', x: 60, y: 94, label: '🚀 AccuCAD 3D', col: '#38bdf8' },
-        { id: 'economics_spear', x: 400, y: 94, label: '🤖 Econ Essay', col: '#34d399' },
-        { id: 'career', x: 62, y: 152, label: '📜 Patents', col: '#60a5fa' },
-        { id: 'homesetup', x: 398, y: 152, label: '🖥️ HomeSetup', col: '#10b981' },
-        { id: 'financial', x: 84, y: 214, label: '📊 Valuation', col: '#f59e0b' },
-        { id: 'economics', x: 230, y: 234, label: '🏛️ Master Opus', col: '#a78bfa' },
-        { id: 'family', x: 376, y: 214, label: '⚖️ Family/Sit.', col: '#f43f5e' }
-      ];
+        const cx = 240, cy = 140;
 
-      const cx = 230, cy = 122;
-      nodes.forEach(n => {
-        svg.appendChild(makeElement('svg:line', {
-          x1: cx, y1: cy, x2: n.x, y2: n.y,
-          stroke: n.col, 'stroke-width': '1.4', 'stroke-dasharray': '4,3', opacity: '0.62'
+        svg.appendChild(makeElement('svg:ellipse', {
+          cx, cy, rx: '176', ry: '118',
+          fill: 'none', stroke: 'rgba(0, 242, 254, 0.18)', 'stroke-width': '1', 'stroke-dasharray': '3,4'
         }));
-      });
 
-      const centerG = makeElement('svg:g', { transform: `translate(${cx - 54}, ${cy - 18})`, className: 'pt-constellation-node' });
-      centerG.appendChild(makeElement('svg:rect', {
-        width: '108', height: '36', rx: '18', fill: '#082f49', stroke: '#00f2fe', 'stroke-width': '1.6', filter: 'url(#pt-glow)'
-      }));
-      centerG.appendChild(makeElement('svg:text', {
-        x: '54', y: '22', fill: '#00f2fe', 'font-family': 'monospace', 'font-size': '9.8', 'font-weight': 'bold', 'text-anchor': 'middle'
-      }, 'ROB • PORTAL'));
-      centerG.onclick = () => PortalModals.openGuidedTourDialog(this);
-      svg.appendChild(centerG);
+        nodes.forEach(n => {
+          const mode = n.docId ? (docModes[n.docId] || 'off') : 'off';
+          const isSel = mode !== 'off';
+          svg.appendChild(makeElement('svg:line', {
+            x1: cx, y1: cy, x2: n.x, y2: n.y,
+            stroke: n.col,
+            'stroke-width': isSel ? '2.2' : '1.2',
+            'stroke-dasharray': isSel ? 'none' : '4,3',
+            opacity: isSel ? '0.92' : '0.45'
+          }));
+        });
 
-      nodes.forEach(n => {
-        const g = makeElement('svg:g', { transform: `translate(${n.x - 56}, ${n.y - 13})`, className: 'pt-constellation-node' });
-        g.appendChild(makeElement('svg:rect', {
-          width: '112', height: '26', rx: '7', fill: '#0b101b', stroke: n.col, 'stroke-width': '1.3'
+        const centerG = makeElement('svg:g', { transform: `translate(${cx - 56}, ${cy - 19})`, className: 'pt-constellation-node' });
+        centerG.appendChild(makeElement('svg:rect', {
+          width: '112', height: '38', rx: '19', fill: '#082f49', stroke: '#00f2fe', 'stroke-width': '1.8', filter: 'url(#pt-glow)'
         }));
-        g.appendChild(makeElement('svg:text', {
-          x: '56', y: '17', fill: '#f8fafc', 'font-family': 'monospace', 'font-size': '9.5', 'font-weight': 'bold', 'text-anchor': 'middle'
-        }, n.label));
-        g.onclick = () => {
-          const pillar = PortalData.getPillars().find(p => p.id === n.id);
-          if (pillar) PortalModals.openPillarDialog(pillar, this);
+        centerG.appendChild(makeElement('svg:text', {
+          x: '56', y: '17', fill: '#00f2fe', 'font-family': 'monospace', 'font-size': '9.5', 'font-weight': 'bold', 'text-anchor': 'middle'
+        }, 'ROB • PORTAL'));
+        centerG.appendChild(makeElement('svg:text', {
+          x: '56', y: '29', fill: '#94a3b8', 'font-family': 'monospace', 'font-size': '7.5', 'text-anchor': 'middle'
+        }, 'Read Composed ▸'));
+        centerG.onclick = () => this.openComposedPage();
+        svg.appendChild(centerG);
+
+        const modeBadgeMap = { summary: 'SUM', core: 'CORE', indepth: 'FULL', custom: 'PART' };
+
+        const updateLegendFor = (n, mode) => {
+          const legend = document.getElementById('pt-constellation-legend');
+          if (!legend) return;
+          legend.innerHTML = '';
+          const modeText = mode === 'off' ? 'OFF' : (modeBadgeMap[mode] || mode.toUpperCase());
+          legend.appendChild(makeElement('span', { style: { color: n.col, fontWeight: '700' } }, `${n.label} [${modeText}]`));
+          const btns = makeElement('div', { style: { display: 'flex', gap: '5px', flexWrap: 'wrap' } });
+          if (n.docId) {
+            btns.appendChild(makeElement('button', {
+              className: 'pt-btn',
+              style: { fontSize: '9.5px', padding: '2px 7px', color: n.col, borderColor: `${n.col}66` },
+              onclick: () => this.openProjectInPlace(n.docId)
+            }, '📖 Open'));
+          }
+          const pillar = PortalData.getPillars().find(p => p.id === n.id || p.projectName === n.docId);
+          if (pillar) {
+            btns.appendChild(makeElement('button', {
+              className: 'pt-btn',
+              style: { fontSize: '9.5px', padding: '2px 7px' },
+              onclick: () => PortalModals.openPillarDialog(pillar, this)
+            }, '🔍 Details'));
+          }
+          legend.appendChild(btns);
         };
-        svg.appendChild(g);
-      });
 
-      return svg;
-    }
+        nodes.forEach(n => {
+          const mode = n.docId ? (docModes[n.docId] || 'off') : 'off';
+          const isSel = mode !== 'off';
+          const cCount = n.docId ? (cmtCounts[n.docId] || 0) : 0;
 
+          const g = makeElement('svg:g', { transform: `translate(${n.x - 59}, ${n.y - 14})`, className: 'pt-constellation-node' });
+          g.appendChild(makeElement('svg:title', {}, `${n.label}: Click to show in Tree below • Click right pill to toggle Off / Sum / Core / Full`));
+          g.appendChild(makeElement('svg:rect', {
+            width: '118', height: '28', rx: '7',
+            fill: isSel ? '#0f2236' : '#0b101b',
+            stroke: n.col,
+            'stroke-width': isSel ? '2' : '1.1',
+            filter: isSel ? 'url(#pt-glow)' : 'none'
+          }));
+          g.appendChild(makeElement('svg:text', {
+            x: n.docId ? '46' : '59', y: '17', fill: '#f8fafc',
+            'font-family': 'monospace', 'font-size': '9.1', 'font-weight': 'bold', 'text-anchor': 'middle'
+          }, n.label));
+
+          g.onclick = () => {
+            updateLegendFor(n, mode);
+            if (n.docId && typeof PortalPromptBuilder !== 'undefined' && typeof PortalPromptBuilder.focusProject === 'function') {
+              if (catalog.some(c => c.id === n.docId)) {
+                PortalPromptBuilder.focusProject(n.docId);
+                return;
+              }
+            }
+            const pillar = PortalData.getPillars().find(p => p.id === n.id || p.projectName === n.docId);
+            if (pillar) PortalModals.openPillarDialog(pillar, this);
+          };
+
+          if (n.docId && catalog.some(c => c.id === n.docId)) {
+            const badgeTxt = modeBadgeMap[mode] || '+';
+            const pillG = makeElement('svg:g', { transform: 'translate(90, 4)', style: { cursor: 'pointer' } });
+            pillG.appendChild(makeElement('svg:title', {}, 'Click to cycle: Off → Summary → Core → Full'));
+            pillG.appendChild(makeElement('svg:rect', {
+              width: '25', height: '20', rx: '5',
+              fill: isSel ? n.col : '#162033',
+              stroke: n.col, 'stroke-width': '0.9'
+            }));
+            pillG.appendChild(makeElement('svg:text', {
+              x: '12.5', y: '13.5',
+              fill: isSel ? '#060911' : n.col,
+              'font-family': 'monospace', 'font-size': badgeTxt.length > 2 ? '6.8' : '9',
+              'font-weight': 'bold', 'text-anchor': 'middle'
+            }, badgeTxt));
+            pillG.onclick = (e) => {
+              e.stopPropagation();
+              const docObj = catalog.find(c => c.id === n.docId);
+              if (!docObj || typeof PartialDocumentEngine === 'undefined') return;
+              const order = ['off', 'summary', 'core', 'indepth'];
+              const nextMode = order[(order.indexOf(mode === 'custom' ? 'indepth' : mode) + 1) % order.length];
+              PartialDocumentEngine.setDocMode(docObj, nextMode);
+              updateLegendFor(n, nextMode);
+            };
+            g.appendChild(pillG);
+          }
+
+          if (cCount > 0) {
+            const cG = makeElement('svg:g', { transform: 'translate(-5, -7)' });
+            cG.appendChild(makeElement('svg:rect', {
+              width: '24', height: '14', rx: '7', fill: '#7c3aed', stroke: '#e9d5ff', 'stroke-width': '0.8'
+            }));
+            cG.appendChild(makeElement('svg:text', {
+              x: '12', y: '10', fill: '#ffffff', 'font-family': 'monospace', 'font-size': '7.5', 'font-weight': 'bold', 'text-anchor': 'middle'
+            }, `💬${cCount}`));
+            g.appendChild(cG);
+          }
+
+          svg.appendChild(g);
+        });
+
+        return svg;
+      }
   _buildKeysBanner() {
       return makeElement('section', { className: 'pt-keys-panel', 'data-block-id': 'portal_keys_banner' }, [
         makeElement('div', { style: { flex: '1 1 460px' } }, [
@@ -355,19 +567,26 @@ class Portal {
         }
       });
 
+      const spaProj = p.projectName || null;
+
       card.appendChild(makeElement('div', { className: 'pt-card-head' }, [
         makeElement('div', {}, [
           makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', fontWeight: '800', color: p.accent } }, p.badge),
-          makeElement('a', {
-            href: p.url,
-            target: '_blank',
-            rel: 'noopener noreferrer',
-            style: { textDecoration: 'none', color: 'inherit', display: 'inline-block' }
-          }, [
-            makeElement('h3', { className: 'pt-card-title', style: { cursor: 'pointer' } }, `${p.icon} ${p.name} ↗`)
-          ]),
+          makeElement('h3', {
+            className: 'pt-card-title',
+            style: { cursor: 'pointer' },
+            onclick: () => spaProj ? this.openProjectInPlace(spaProj) : window.open(p.url, '_blank', 'noopener,noreferrer')
+          }, `${p.icon} ${p.name}`),
           makeElement('div', { className: 'pt-card-sub', style: { color: '#94a3b8' } }, p.subtitle)
-        ])
+        ]),
+        makeElement('a', {
+          href: p.url,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          className: 'pt-btn',
+          title: 'Open in separate browser tab',
+          style: { fontSize: '10px', padding: '3px 7px' }
+        }, '↗')
       ]));
 
       card.appendChild(makeElement('p', { className: 'pt-card-summary' }, p.publicSummary));
@@ -380,13 +599,17 @@ class Portal {
       ));
 
       card.appendChild(makeElement('div', { className: 'pt-card-footer' }, [
-        makeElement('a', {
+        spaProj ? makeElement('button', {
+          className: 'pt-btn',
+          style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent },
+          onclick: () => this.openProjectInPlace(spaProj)
+        }, '📖 Open In-Place') : makeElement('a', {
           href: p.url,
           target: '_blank',
           rel: 'noopener noreferrer',
           className: 'pt-btn',
           style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent }
-        }, p.openLabel || '📄 Open Document ↗'),
+        }, p.openLabel || '📄 Open ↗'),
         makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
           makeElement('button', {
             className: 'pt-btn',
@@ -397,7 +620,7 @@ class Portal {
             className: 'pt-btn',
             style: { fontSize: '11px', padding: '4px 9px' },
             onclick: () => this.openInDocumentReader(p.docPageId)
-          }, '📖 Chapter')
+          }, '📄 Chapter')
         ])
       ]));
 
@@ -594,11 +817,7 @@ class Portal {
         window.removeEventListener('popstate', this._routeSyncHandler);
         this._routeSyncHandler = null;
       }
-      this._teardownDocumentReader();
-      if (this.aardvark) {
-        this.aardvark.destroy();
-        this.aardvark = null;
-      }
+      this._teardownActiveSubView();
       if (globalThis._portalInstance === this) globalThis._portalInstance = null;
       if (globalThis._cadPlanInstance === this) globalThis._cadPlanInstance = null;
       this.rootElement = null;
@@ -667,9 +886,10 @@ class Portal {
         {
           kicker: 'PERSONAL & FAMILY RECORD (NOV 2026)',
           title: '⚖️ Family, Stella & Current Situation',
-          desc: 'Chico apartment & Social Security stabilized (Jack helped move; Don on email). Out of contact—not by choice—with all blood relatives (my 94-year-old mother, the sister I talked to regularly, and my 12-year-old daughter Stella in SF). Carrying both separations weighed heavily on my mental health. Bringing spring legal mail to therapy tomorrow; deeper June 2026 & custody records live in Situation.',
+          desc: 'Chico apartment & Social Security stabilized (Jack helped move; Don on email). Out of contact—not by choice—with all blood relatives (my 94-year-old mother, the sister I talked to regularly, and my 12-year-old daughter Stella in SF). Bringing spring legal mail to therapy tomorrow; deeper June 2026 & custody records live in Situation.',
           col: '#f43f5e',
-          primaryText: '📄 Open Situation Document ↗',
+          primaryText: '📖 Open Situation In-Place',
+          projName: 'situation',
           primaryUrl: PortalData.resolveAppUrl('situation'),
           chapterId: 'family'
         },
@@ -678,7 +898,8 @@ class Portal {
           title: '📊 $1.2B–$5.54B+ Value Created vs. Reality',
           desc: 'Unprimed Google Search & 4 independent AIs ($2.3B midpoint) attribute a massive share of Bentley Systems\' anti-churn moat to AccuDraw & SmartLine—showing how well I perform in the right technical environment, contrasted with my current financial reality.',
           col: '#f59e0b',
-          primaryText: '📄 Open Valuation Document ↗',
+          primaryText: '📖 Open Valuation In-Place',
+          projName: 'ValuationOfAccudraw',
           primaryUrl: PortalData.resolveAppUrl('ValuationOfAccudraw'),
           copyPrompt: true,
           chapterId: 'financial'
@@ -697,9 +918,10 @@ class Portal {
           title: '📐 CadPlan Document + AccuCAD 3D App',
           desc: 'Built on my AccuDraw & SmartLine inventions at Bentley Systems. Pairs an architectural specification document with a live 3D WebGL app embedded inside so AI agents can insert AccuDraw into open-source AutoCAD/MicroStation clones.',
           col: '#38bdf8',
-          primaryText: '📐 Open Spec + 3D App ↗',
+          primaryText: '📖 Open CadPlan In-Place',
+          projName: 'CadPlan',
           primaryUrl: PortalData.resolveAppUrl('CadPlan'),
-          secondaryText: '🚀 AccuCAD 3D App ↗',
+          secondaryText: '🚀 AccuCAD 3D ↗',
           secondaryUrl: PortalData.resolveAppUrl('accuCad'),
           chapterId: 'spear_accucad'
         },
@@ -708,10 +930,12 @@ class Portal {
           title: '〰️ Kinetic Curve App & 🤖 Economics Document',
           desc: 'An everyday social-media image markup app with 32px kinetic smoothing (modifiable via Luno), alongside the plain-English Economics of Automation visual essay and simulator on the Robot Dividend.',
           col: '#c084fc',
-          primaryText: '🚀 Open Curve App ↗',
-          primaryUrl: PortalData.resolveAppUrl('QuoraToys'),
-          secondaryText: '📖 Read Econ Essay ↗',
-          secondaryUrl: PortalData.resolveAppUrl('EconomicsOfAutomation'),
+          primaryText: '📖 Open Economics In-Place',
+          projName: 'EconomicsOfAutomation',
+          primaryUrl: PortalData.resolveAppUrl('EconomicsOfAutomation'),
+          secondaryText: '〰️ Curve App',
+          secondaryProj: 'QuoraToys',
+          secondaryUrl: PortalData.resolveAppUrl('QuoraToys'),
           chapterId: 'spear_drawing'
         },
         {
@@ -719,9 +943,11 @@ class Portal {
           title: '🏛️ Master Opus & 🖥️ HomeSetup Documents',
           desc: 'Opus unites all 4 life quadrants with Tier 0–3 AI context depth and a 4-turn hallucination-to-truth stepper, backed by the HomeSetup fleet document covering the Mac Mini & Ubuntu Port 8080 setup.',
           col: '#10b981',
-          primaryText: '📄 Open Master Opus ↗',
+          primaryText: '📖 Open Master Opus In-Place',
+          projName: 'Opus',
           primaryUrl: PortalData.resolveAppUrl('Opus'),
-          secondaryText: '📄 HomeSetup Doc ↗',
+          secondaryText: '🖥️ HomeSetup',
+          secondaryProj: 'HomeSetup',
           secondaryUrl: PortalData.resolveAppUrl('HomeSetup'),
           chapterId: 'economics'
         }
@@ -732,8 +958,8 @@ class Portal {
         'data-block-id': 'portal_quick_doors'
       }, [
         makeElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' } }, [
-          makeElement('strong', { style: { fontFamily: 'var(--pt-mono)', fontSize: '12px', color: '#00f2fe', letterSpacing: '0.06em' } }, '⭐ IMPORTANT AT A GLANCE — SITUATION, RECORD & WORK'),
-          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: '#94a3b8' } }, 'Click 📖 Read Chapter (Back button returns here) or open any full document / app ↗')
+          makeElement('strong', { style: { fontFamily: 'var(--pt-mono)', fontSize: '12px', color: '#00f2fe', letterSpacing: '0.06em' } }, '⭐ IMPORTANT AT A GLANCE — OPEN ANY DOCUMENT IN-PLACE'),
+          makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', color: '#94a3b8' } }, 'Opens inside this SPA (use ↗ icon on cards if you want a separate tab)')
         ]),
         makeElement('div', { className: 'pt-highlights-grid' },
           highlights.map(h => makeElement('div', {
@@ -746,55 +972,67 @@ class Portal {
               makeElement('div', { style: { fontSize: '12.5px', color: '#cbd5e1', lineHeight: '1.52' } }, h.desc)
             ]),
             makeElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '8px', borderTop: '1px solid #1a2333' } }, [
-              makeElement('a', {
+              h.projName ? makeElement('button', {
+                className: 'pt-btn',
+                style: { fontSize: '11px', padding: '5px 10px', borderColor: `${h.col}77`, color: h.col },
+                onclick: () => this.openProjectInPlace(h.projName)
+              }, h.primaryText) : makeElement('a', {
                 href: h.primaryUrl,
                 target: '_blank',
                 rel: 'noopener noreferrer',
                 className: 'pt-btn',
-                style: { fontSize: '11px', padding: '5px 10px', borderColor: `${h.col}77`, color: pOrHColor(h.col) }
+                style: { fontSize: '11px', padding: '5px 10px', borderColor: `${h.col}77`, color: h.col }
               }, h.primaryText),
-              h.secondaryUrl ? makeElement('a', {
+              h.secondaryProj ? makeElement('button', {
+                className: 'pt-btn',
+                style: { fontSize: '11px', padding: '5px 10px' },
+                onclick: () => this.openProjectInPlace(h.secondaryProj)
+              }, h.secondaryText) : (h.secondaryUrl ? makeElement('a', {
                 href: h.secondaryUrl,
                 target: '_blank',
                 rel: 'noopener noreferrer',
                 className: 'pt-btn',
                 style: { fontSize: '11px', padding: '5px 10px' }
-              }, h.secondaryText) : null,
+              }, h.secondaryText) : null),
               h.copyPrompt ? makeElement('button', {
                 className: 'pt-btn pt-btn-amber',
                 style: { fontSize: '11px', padding: '5px 10px' },
-                onclick: () => navigator.clipboard?.writeText(PortalData.getUnprimedVerificationPrompt()).then(() => alert('✓ Copied blind verification prompt! Paste it into incognito Google Search or Gemini.'))
+                onclick: () => navigator.clipboard?.writeText(PortalData.getUnprimedVerificationPrompt()).then(() => alert('✓ Copied blind verification prompt!'))
               }, '🔎 Copy Blind Test') : null,
               makeElement('button', {
                 className: 'pt-btn',
                 style: { fontSize: '11px', padding: '5px 10px' },
                 onclick: () => this.openInDocumentReader(h.chapterId)
-              }, '📖 Read Chapter')
+              }, '📄 Summary')
             ].filter(Boolean))
           ]))
         )
       ]);
-
-      function pOrHColor(c) { return c; }
     }
+
   _getHashRoute() {
       const docPages = ['spear_drawing', 'spear_economics', 'spear_accucad', 'luno', 'homesetup', 'career', 'financial', 'family', 'economics', 'visitor_keys'];
       const rawHash = (window.location.hash || '').replace(/^#\/?/, '');
       if (!rawHash || rawHash === 'frontpage') {
-        return { mode: 'frontpage', pageId: null, anchorId: null };
+        return { mode: 'frontpage', pageId: null, anchorId: null, projectName: null };
       }
       const parts = rawHash.split('/').filter(Boolean);
       const first = parts[0] || '';
+      if (first === 'composed') {
+        return { mode: 'composed', pageId: parts[1] || 'all', anchorId: null, projectName: null };
+      }
+      if (first === 'app' && parts[1]) {
+        return { mode: 'project', projectName: parts[1], pageId: parts[2] || null, anchorId: parts[3] || null };
+      }
       if (first === 'doc') {
         const p = docPages.includes(parts[1]) ? parts[1] : 'spear_drawing';
-        return { mode: 'document', pageId: p, anchorId: parts[2] || null };
+        return { mode: 'document', pageId: p, anchorId: parts[2] || null, projectName: null };
       }
       if (docPages.includes(first)) {
-        return { mode: 'document', pageId: first, anchorId: parts[1] || null };
+        return { mode: 'document', pageId: first, anchorId: parts[1] || null, projectName: null };
       }
-      return { mode: 'frontpage', pageId: null, anchorId: null };
+      return { mode: 'frontpage', pageId: null, anchorId: null, projectName: null };
     }
-
   _setUrlHash(pageId = '') {
       const targetHash = pageId ? `#${pageId}` : '';
       const curHash = window.location.hash || '';
@@ -823,12 +1061,25 @@ class Portal {
       try {
         const route = this._getHashRoute();
         if (route.mode === 'frontpage') {
+          if (this.mode === 'project' && this.activeInPlaceApp) {
+            // Allow internal Group 2 sub-routes like #/court-filing without tearing down SituationApp
+            const raw = (window.location.hash || '').replace(/^#\/?/, '');
+            if (raw && raw !== 'frontpage' && !raw.startsWith('app/')) return;
+          }
           if (this.mode !== 'frontpage') {
             this.mode = 'frontpage';
             this.pendingDocPageId = null;
             this.pendingAnchorId = null;
+            this.pendingProjectName = null;
             await this.refresh();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else if (route.mode === 'composed') {
+          this.mode = 'composed';
+          await this.refresh();
+        } else if (route.mode === 'project') {
+          if (this.mode !== 'project' || this.activeInPlaceProject !== route.projectName) {
+            await this.openProjectInPlace(route.projectName, route.pageId, route.anchorId, false);
           }
         } else {
           if (this.mode !== 'document') {
@@ -852,13 +1103,13 @@ class Portal {
       this.mode = 'frontpage';
       this.pendingDocPageId = null;
       this.pendingAnchorId = null;
+      this.pendingProjectName = null;
       if (updateUrl) {
         this._setUrlHash('');
       }
       await this.refresh();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
   _buildEcosystemStrip() {
       const items = [
         {
@@ -885,6 +1136,304 @@ class Portal {
         ]))
       );
     }
+
+  async openProjectInPlace(projectName, pageId = null, anchorId = null, updateUrl = true) {
+      if (!projectName) return;
+      if (projectName === 'Luno') {
+        window.open(PortalData.resolveAppUrl('Luno'), '_blank', 'noopener,noreferrer');
+        return;
+      }
+      this.mode = 'project';
+      this.pendingProjectName = projectName;
+      this.pendingDocPageId = pageId || null;
+      this.pendingAnchorId = anchorId || null;
+      if (updateUrl) {
+        const target = pageId ? `app/${projectName}/${pageId}` : `app/${projectName}`;
+        this._setUrlHash(target);
+      }
+      await this._renderInPlaceProject(projectName, pageId, anchorId);
+    }
+
+  async openComposedPage(updateUrl = true) {
+      this.mode = 'composed';
+      if (updateUrl) {
+        this._setUrlHash('composed');
+      }
+      await this._renderComposedPageMode();
+    }
+
+  async _renderInPlaceProject(projectName, pageId = null, anchorId = null) {
+        this._teardownActiveSubView();
+        if (this.aardvark) {
+          this.aardvark.destroy();
+          this.aardvark = null;
+        }
+
+        this.rootElement.innerHTML = '';
+        const loadingCard = makeElement('div', {
+          style: { padding: '48px 20px', textAlign: 'center', fontFamily: 'var(--pt-mono)', color: '#00f2fe', fontSize: '14px' }
+        }, `⚡ Loading [${projectName}] in-place into Portal SPA...`);
+        this.rootElement.appendChild(loadingCard);
+
+        try {
+          globalThis._lunoSpaHostContext = {
+            activeProject: projectName,
+            hashPrefix: `app/${projectName}/`,
+            onNavigateHome: () => this.goToFrontPage(true),
+            onOpenComposed: () => this.openComposedPage(true)
+          };
+
+          const { EntryClass, methodName, meta } = await LunoLoader.loadProjectIntoSpa(projectName);
+          if (!EntryClass) {
+            throw new Error(`Entrypoint class for [${projectName}] could not be loaded.`);
+          }
+
+          this.rootElement.innerHTML = '';
+          const hostWrap = makeElement('div', {
+            id: 'pt-spa-host-wrap',
+            style: { width: '100%', minHeight: '100vh', position: 'relative' }
+          });
+
+          const docReaderApps = new Set(['Opus', 'HomeSetup', 'CadPlan', 'EconomicsOfAutomation', 'QuoraToys', 'Comments']);
+          const isDocReaderApp = docReaderApps.has(projectName);
+
+          if (!isDocReaderApp) {
+            hostWrap.appendChild(this._buildInPlaceSpaBar(projectName));
+          }
+
+          const appMount = makeElement('div', {
+            id: 'pt-spa-app-mount',
+            style: { width: '100%', minHeight: isDocReaderApp ? '100vh' : 'calc(100vh - 54px)', position: 'relative' }
+          });
+          hostWrap.appendChild(appMount);
+          this.rootElement.appendChild(hostWrap);
+
+          if (!isDocReaderApp) {
+            this._installRelativeAssetRewriter(appMount, projectName);
+          }
+
+          const inst = new EntryClass();
+          this.activeInPlaceApp = inst;
+          this.activeInPlaceProject = projectName;
+
+          if (typeof inst[methodName] === 'function') {
+            await inst[methodName]({ container: appMount, meta });
+          } else if (typeof EntryClass[methodName] === 'function') {
+            await EntryClass[methodName]({ container: appMount, meta });
+          }
+
+          if (meta && meta.universalComments && typeof LunoLoader !== 'undefined' && typeof LunoLoader.ensureCommentsLoaded === 'function') {
+            LunoLoader.ensureCommentsLoaded().then(() => {
+              if (typeof UniversalCommentsOverlay !== 'undefined' && appMount.isConnected) {
+                UniversalCommentsOverlay.attach(appMount, { dossierId: projectName, pageId: 'overview' });
+              }
+            }).catch(() => {});
+          }
+
+          if (pageId && inst.reader && typeof inst.reader.switchPage === 'function' && inst.reader.currentPageId !== pageId) {
+            inst.reader.switchPage(pageId, false);
+          }
+          if (anchorId && inst.reader && typeof inst.reader.highlightTarget === 'function') {
+            setTimeout(() => inst.reader.highlightTarget(anchorId), 260);
+          }
+        } catch (err) {
+          this.rootElement.innerHTML = '';
+          this.rootElement.appendChild(this._buildInPlaceSpaBar(projectName));
+          this.rootElement.appendChild(makeElement('div', {
+            style: { maxWidth: '720px', margin: '40px auto', padding: '20px', background: '#2c080a', border: '2px solid #f85149', borderRadius: '10px', color: '#ff7b72', fontFamily: 'monospace' }
+          }, [
+            makeElement('h3', {}, `⚠️ Could not load [${projectName}] in-place`),
+            makeElement('pre', { style: { whiteSpace: 'pre-wrap', marginTop: '10px', fontSize: '12px' } }, err.stack || err.message),
+            makeElement('div', { style: { marginTop: '14px', display: 'flex', gap: '8px' } }, [
+              makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => this.goToFrontPage(true) }, '← Back to Portal'),
+              makeElement('a', { href: PortalData.resolveAppUrl(projectName), target: '_blank', className: 'pt-btn' }, `↗ Open ${projectName} in New Tab`)
+            ])
+          ]));
+        }
+      }
+  _buildInPlaceSpaBar(activeProj) {
+        const projects = [
+          { id: 'situation', label: '⚖️ Situation' },
+          { id: 'ValuationOfAccudraw', label: '📊 Valuation' },
+          { id: 'Opus', label: '🏛️ Master Opus' },
+          { id: 'CadPlan', label: '📐 CadPlan' },
+          { id: 'accudraw', label: '📜 AccuDraw Archive' },
+          { id: 'EconomicsOfAutomation', label: '🤖 Economics' },
+          { id: 'JobsAndAI', label: '📈 Jobs & AI' },
+          { id: 'HomeSetup', label: '🖥️ HomeSetup' },
+          { id: 'QuoraToys', label: '〰️ Curve App' },
+          { id: 'Comments', label: '💬 Comments Docs' },
+          { id: 'TouchController', label: '📱 TouchController' }
+        ];
+
+        const switcher = makeElement('select', {
+          style: {
+            background: '#05080f', color: '#00f2fe', border: '1px solid #1e293b',
+            borderRadius: '6px', padding: '5px 10px', fontFamily: 'var(--pt-mono)', fontSize: '11.5px', fontWeight: '700'
+          },
+          onchange: (e) => {
+            if (e.target.value) this.openProjectInPlace(e.target.value);
+          }
+        }, projects.map(p => makeElement('option', { value: p.id, selected: p.id === activeProj }, p.label)));
+
+        return makeElement('div', {
+          className: 'pt-topbar',
+          id: 'pt-inplace-spa-bar',
+          style: { borderBottom: '1px solid rgba(0, 242, 254, 0.3)' }
+        }, [
+          makeElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } }, [
+            makeElement('button', { className: 'pt-btn pt-btn-cyan', onclick: () => this.goToFrontPage(true) }, '← Portal Home'),
+            switcher
+          ]),
+          makeElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } }, [
+            makeElement('button', { className: 'pt-btn pt-btn-emerald', onclick: () => this.openComposedPage(true) }, '🧩 Composed Page'),
+            makeElement('button', {
+              className: 'pt-btn pt-btn-purple',
+              onclick: () => DocumentReader.openCommentsHub({ dossierId: activeProj })
+            }, '💬 Comments Hub'),
+            makeElement('a', {
+              href: PortalData.resolveAppUrl(activeProj),
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              className: 'pt-btn'
+            }, '↗ Pop Out Tab')
+          ])
+        ]);
+      }
+  _installRelativeAssetRewriter(mountEl, projectName) {
+      const rewrite = () => {
+        mountEl.querySelectorAll('img[src]').forEach(img => {
+          const raw = img.getAttribute('src') || '';
+          if (!raw || raw.startsWith('http') || raw.startsWith('data:') || raw.startsWith('/') || raw.startsWith('../')) return;
+          img.setAttribute('src', LunoLoader.resolveScriptUrl(`../${projectName}/${raw}`));
+        });
+      };
+      rewrite();
+      this._assetObserver = new MutationObserver(rewrite);
+      this._assetObserver.observe(mountEl, { childList: true, subtree: true });
+    }
+
+  async _renderComposedPageMode() {
+      this._teardownActiveSubView();
+      if (this.aardvark) {
+        this.aardvark.destroy();
+        this.aardvark = null;
+      }
+      this.rootElement.innerHTML = '';
+
+      if (typeof PartialDocumentEngine === 'undefined') {
+        this._renderFrontPageMode();
+        return;
+      }
+
+      const compiled = await PartialDocumentEngine.compileComposition();
+      const comp = compiled.composition;
+
+      const virtualPages = compiled.segments.length > 0
+        ? compiled.segments.map((seg, idx) => ({
+            id: `seg_${idx}`,
+            title: `${idx + 1}. ${seg.docIcon} ${seg.secLabel}`,
+            docClass: () => ({
+              name: 'ComposedPartialDoc',
+              getMeta: () => ({
+                kicker: `${seg.docTitle} • ${seg.modeLabel} SLICE`,
+                title: `${idx + 1}. ${seg.secLabel}`,
+                subtitle: `Compiled live from [${seg.docId} → ${seg.secId}]`
+              }),
+              manifest: () => [
+                {
+                  section: `composed_${idx}`,
+                  partLabel: `Source: ${seg.docId}`,
+                  title: seg.secLabel,
+                  blocks: [{ id: `blk_composed_${idx}`, type: 'p' }]
+                }
+              ],
+              [`blk_composed_${idx}`]: () => [seg.markdown]
+            })
+          }))
+        : [{
+            id: 'empty',
+            title: '0. Empty Composition',
+            docClass: () => ({
+              name: 'ComposedPartialDoc',
+              getMeta: () => ({ kicker: 'Composed Partial Page', title: 'No Slices Selected Yet', subtitle: 'Return to Portal Front Page to select Summary, Core, or In-Depth slices.' }),
+              manifest: () => [{ section: 'empty', partLabel: 'Guide', title: 'How to Compose', blocks: [{ id: 'p_empty', type: 'p' }] }],
+              p_empty: () => ['Go back to **Portal Home** and select any documents, sections, or blocks in the Partial Document Builder, or click **🧩 +Partial** while reading inside any document.']
+            })
+          }];
+
+      // Prepend a unified All-In-One overview page showing the entire composed Markdown together!
+      if (compiled.segments.length > 0) {
+        virtualPages.unshift({
+          id: 'all',
+          title: `0. Full Composed Page (${compiled.segments.length} slices)`,
+          docClass: () => ({
+            name: 'ComposedPartialAll',
+            getMeta: () => ({
+              kicker: `Composed Partial Document • ${comp.name || 'Custom'}`,
+              title: comp.question?.trim() ? comp.question.trim() : `Composed Multi-Document Page (${compiled.segments.length} Slices)`,
+              subtitle: `${compiled.words.toLocaleString()} words • ~${compiled.approxTokens.toLocaleString()} tokens • Standard Non-Luno Markdown`
+            }),
+            manifest: () => compiled.segments.map((seg, idx) => ({
+              section: `slice_${idx}`,
+              partLabel: `${seg.docIcon} ${seg.docTitle} (${seg.modeLabel})`,
+              title: `${idx + 1}. ${seg.secLabel}`,
+              blocks: [{ id: `slice_blk_${idx}`, type: 'p' }]
+            })),
+            ...Object.fromEntries(compiled.segments.map((seg, idx) => [`slice_blk_${idx}`, () => [seg.markdown]]))
+          })
+        });
+      }
+
+      globalThis._lunoSpaHostContext = {
+        activeProject: null,
+        hashPrefix: 'composed/',
+        onNavigateHome: () => this.goToFrontPage(true)
+      };
+
+      this.reader = new DocumentReader({
+        container: this.rootElement,
+        brandTitle: `Composed: ${comp.name || 'Partial Page'}`,
+        brandIcon: '🧩',
+        dossierId: 'PortalComposed',
+        disableEmptyHashFallback: true,
+        pages: virtualPages,
+        itemNotes: globalThis.CadPlanItemNotes || null,
+        itemNotesClass: globalThis.CadPlanItemNotes || null,
+        editorClass: globalThis.CadPlanDocumentEditor || null
+      });
+
+      await this.reader.init();
+
+      if (typeof SidePanel !== 'undefined') {
+        this.sidePanel = new SidePanel('left', 300, null);
+        this.reader.options.sidePanel = this.sidePanel;
+        this._populateDocSidePanel(virtualPages);
+        if (window.innerWidth >= 860) this.sidePanel.open();
+      }
+    }
+
+  _teardownActiveSubView() {
+        if (typeof UniversalCommentsOverlay !== 'undefined' && this.rootElement) {
+          const prevShell = this.rootElement.querySelector('.pt-root');
+          if (prevShell) UniversalCommentsOverlay.detach(prevShell);
+          UniversalCommentsOverlay.detach(this.rootElement);
+        }
+        if (this._assetObserver) {
+          this._assetObserver.disconnect();
+          this._assetObserver = null;
+        }
+        if (this.activeInPlaceApp && typeof this.activeInPlaceApp.destroy === 'function') {
+          try { this.activeInPlaceApp.destroy(); } catch (e) {}
+        }
+        this.activeInPlaceApp = null;
+        this.activeInPlaceProject = null;
+        globalThis._lunoSpaHostContext = null;
+        if (typeof LunoLoader !== 'undefined' && typeof LunoLoader.unloadSpaStyles === 'function') {
+          LunoLoader.unloadSpaStyles();
+        }
+        this._teardownDocumentReader();
+      }
 }
 
 globalThis.Portal = Portal;

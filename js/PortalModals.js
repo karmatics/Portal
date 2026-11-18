@@ -39,13 +39,7 @@ class PortalModals {
       });
 
       const head = makeElement('div', {
-        style: {
-          borderLeft: `4px solid ${pillar.accent}`,
-          paddingLeft: '14px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '4px'
-        }
+        style: { borderLeft: `4px solid ${pillar.accent}`, paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '4px' }
       }, [
         makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10.5px', fontWeight: '800', color: pillar.accent } }, pillar.badge),
         makeElement('h2', { style: { fontSize: '1.3rem', fontWeight: '800', color: '#f8fafc', margin: 0 } }, `${pillar.icon} ${pillar.name}`),
@@ -53,27 +47,11 @@ class PortalModals {
       ]);
 
       const summaryBox = makeElement('div', {
-        style: {
-          backgroundColor: '#0c1322',
-          border: '1px solid #1e293b',
-          borderRadius: '8px',
-          padding: '14px 16px',
-          fontSize: '13.5px',
-          lineHeight: '1.65',
-          color: '#e2e8f0'
-        }
+        style: { backgroundColor: '#0c1322', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px 16px', fontSize: '13.5px', lineHeight: '1.65', color: '#e2e8f0' }
       }, pillar.publicSummary);
 
       const calmBanner = makeElement('div', {
-        style: {
-          backgroundColor: '#07121c',
-          border: '1px solid rgba(56, 189, 248, 0.28)',
-          borderRadius: '8px',
-          padding: '10px 14px',
-          fontSize: '12px',
-          color: '#94a3b8',
-          lineHeight: '1.5'
-        }
+        style: { backgroundColor: '#07121c', border: '1px solid rgba(56, 189, 248, 0.28)', borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: '#94a3b8', lineHeight: '1.5' }
       }, `💡 ${pillar.calmNote}`);
 
       body.append(head, summaryBox, calmBanner);
@@ -83,31 +61,15 @@ class PortalModals {
       if (pillar.sensitiveSummary) {
         if (isUnlocked) {
           body.appendChild(makeElement('div', {
-            style: {
-              backgroundColor: '#130e24',
-              border: '1px solid rgba(192, 132, 252, 0.45)',
-              borderRadius: '8px',
-              padding: '12px 14px',
-              fontSize: '12.5px',
-              lineHeight: '1.6',
-              color: '#e9d5ff'
-            }
+            style: { backgroundColor: '#130e24', border: '1px solid rgba(192, 132, 252, 0.45)', borderRadius: '8px', padding: '12px 14px', fontSize: '12.5px', lineHeight: '1.6', color: '#e9d5ff' }
           }, [
             makeElement('strong', { style: { display: 'block', color: '#d8b4fe', marginBottom: '4px', fontSize: '11px', fontFamily: 'var(--pt-mono)' } }, '🔓 ADDITIONAL PERSONAL & FAMILY CONTEXT (UNLOCKED):'),
             pillar.sensitiveSummary
           ]));
         } else if (typeof SensitiveContextGate !== 'undefined') {
           body.appendChild(SensitiveContextGate.renderLockedBlock(
-            {
-              id: 'modal_sensitive_family',
-              sensitiveLabel: 'Additional Family & Legal Context',
-              sensitiveSummary: 'Protected layer containing sensitive family, caregiving, and dispute records (hidden by default; enter access code to view).'
-            },
-            () => {
-              if (dlg) dlg.close();
-              PortalModals.openPillarDialog(pillar, portalApp);
-              if (portalApp) portalApp.refresh();
-            }
+            { id: 'modal_sensitive_family', sensitiveLabel: 'Additional Family & Legal Context', sensitiveSummary: 'Protected layer containing sensitive family, caregiving, and dispute records.' },
+            () => { if (dlg) dlg.close(); PortalModals.openPillarDialog(pillar, portalApp); if (portalApp) portalApp.refresh(); }
           ));
         }
       }
@@ -133,10 +95,7 @@ class PortalModals {
             style: { fontSize: '10.5px', padding: '4px 8px' },
             onclick: () => {
               const target = PortalData.getPillars().find(p => p.id === cl.targetId);
-              if (target) {
-                if (dlg) dlg.close();
-                PortalModals.openPillarDialog(target, portalApp);
-              }
+              if (target) { if (dlg) dlg.close(); PortalModals.openPillarDialog(target, portalApp); }
             }
           }, `→ ${cl.label}`))
         )
@@ -149,19 +108,17 @@ class PortalModals {
         style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', paddingTop: '10px', borderTop: '1px solid #1e293b' }
       }, [
         makeElement('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } }, [
-          makeElement('a', { href: pillar.url, target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, pillar.openLabel || `↗ Open ${pillar.name}`),
-          ...(pillar.extraLinks || []).map(el => makeElement('a', { href: el.url, target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, `↗ ${el.label}`))
-        ]),
+          pillar.projectName && portalApp ? makeElement('button', {
+            className: 'pt-btn pt-btn-cyan',
+            onclick: () => { if (dlg) dlg.close(); portalApp.openProjectInPlace(pillar.projectName); }
+          }, `📖 Open ${pillar.projectName} In-Place`) : null,
+          makeElement('a', { href: pillar.url, target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '↗ New Tab')
+        ].filter(Boolean)),
         makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
           makeElement('button', {
             className: 'pt-btn pt-btn-emerald',
-            onclick: () => {
-              if (portalApp) {
-                if (dlg) dlg.close();
-                portalApp.openInDocumentReader(pillar.docPageId);
-              }
-            }
-          }, '📖 Read Chapter'),
+            onclick: () => { if (portalApp) { if (dlg) dlg.close(); portalApp.openInDocumentReader(pillar.docPageId); } }
+          }, '📄 Portal Chapter'),
           makeElement('button', {
             className: 'pt-btn',
             onclick: () => {

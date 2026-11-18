@@ -1,0 +1,1239 @@
+{
+  "timestamp": "2026-11-18T04:31:15.909Z",
+  "webRoot": "/Users/rob/source/LunoProjects",
+  "syntaxCheck": {
+    "filesChecked": 281,
+    "errorCount": 0,
+    "errors": []
+  },
+  "missingExtractorPaths": [],
+  "staleDuplicates": [
+    {
+      "project": "Comments",
+      "file": "js/CadPlanAardvark.js",
+      "base": "CadPlanAardvark.js"
+    },
+    {
+      "project": "Comments",
+      "file": "js/CadPlanDocumentEditor.js",
+      "base": "CadPlanDocumentEditor.js"
+    },
+    {
+      "project": "Comments",
+      "file": "js/CadPlanItemNotes.js",
+      "base": "CadPlanItemNotes.js"
+    },
+    {
+      "project": "Comments",
+      "file": "js/CommentsAardvark.js",
+      "base": "CommentsAardvark.js"
+    },
+    {
+      "project": "Comments",
+      "file": "js/CommentsDocumentEditor.js",
+      "base": "CommentsDocumentEditor.js"
+    },
+    {
+      "project": "Comments",
+      "file": "js/CommentsItemNotes.js",
+      "base": "CommentsItemNotes.js"
+    },
+    {
+      "project": "Comments",
+      "file": "js/comments/CommentThreadView.js",
+      "base": "CommentThreadView.js",
+      "kind": "comments-subfolder-copy"
+    },
+    {
+      "project": "Comments",
+      "file": "js/comments/Comments.js",
+      "base": "Comments.js",
+      "kind": "comments-subfolder-copy"
+    },
+    {
+      "project": "Comments",
+      "file": "js/comments/MockServerAPI.js",
+      "base": "MockServerAPI.js",
+      "kind": "comments-subfolder-copy"
+    },
+    {
+      "project": "Comments",
+      "file": "js/engine/CommentThreadView.js",
+      "base": "CommentThreadView.js",
+      "kind": "comments-subfolder-copy"
+    },
+    {
+      "project": "Comments",
+      "file": "js/engine/Comments.js",
+      "base": "Comments.js",
+      "kind": "comments-subfolder-copy"
+    },
+    {
+      "project": "Comments",
+      "file": "js/engine/MockServerAPI.js",
+      "base": "MockServerAPI.js",
+      "kind": "comments-subfolder-copy"
+    }
+  ],
+  "brokenIndexLoader": [
+    {
+      "name": "Es6Converter",
+      "indexInfo": {
+        "exists": true,
+        "usesLunoLoader": false,
+        "callsLoadApp": false,
+        "hasInlineScriptTags": 4
+      }
+    },
+    {
+      "name": "SvgStudio",
+      "indexInfo": {
+        "exists": true,
+        "usesLunoLoader": false,
+        "callsLoadApp": false,
+        "hasInlineScriptTags": 3
+      }
+    },
+    {
+      "name": "TouchController",
+      "indexInfo": {
+        "exists": true,
+        "usesLunoLoader": false,
+        "callsLoadApp": false,
+        "hasInlineScriptTags": 4
+      }
+    },
+    {
+      "name": "pianorolls",
+      "indexInfo": {
+        "exists": true,
+        "usesLunoLoader": false,
+        "callsLoadApp": false,
+        "hasInlineScriptTags": 1
+      }
+    }
+  ],
+  "unlinkedDocProjects": [
+    {
+      "name": "AardvarkExtension",
+      "mainClass": "App",
+      "entrypointMethod": "run",
+      "features": {
+        "DictationWidget": 1,
+        "CadPlanItemNotes": 3,
+        "LunoLoader": 2
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [
+        "content/ContentController.js",
+        "content/GoogleContent.js",
+        "content/PlayerBridge.js",
+        "content/YoloPageRelayBridge.js",
+        "content/YoloTargetAgent.js",
+        "content/YouTubeContent.js"
+      ],
+      "pageFilesSample": []
+    },
+    {
+      "name": "AardvarkPlaylist",
+      "mainClass": "YouTubePlayer",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "AlphabetGame",
+      "mainClass": "AlphabetGame",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Basic3D",
+      "mainClass": "Basic3d",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "BasicsWithDialogBox",
+      "mainClass": "BasicsWithDialogBox",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "BookmarkletWorkshop",
+      "mainClass": "BookmarkletApp",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "BulbAndButton",
+      "mainClass": "BulbAndButton",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Bunny",
+      "mainClass": "Bunny",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Bunny3d",
+      "mainClass": "Bunny3d",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Calculator",
+      "mainClass": "Calculator",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Comments",
+      "mainClass": "Comments",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 2,
+        "manifestFn": 27,
+        "getMetaFn": 27,
+        "DocumentReader": 7,
+        "CadPlanAardvark": 3,
+        "CadPlanItemNotes": 7,
+        "CadPlanDocumentEditor": 3,
+        "dataBlockAttr": 7,
+        "DictationWidget": 6,
+        "Comments": 6
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [
+        "js/AccuDrawAnalysisContent.js",
+        "js/CadPlanRoadmapContent.js",
+        "js/CadPlanVisionContent.js",
+        "js/CommentsAiModerationContent.js",
+        "js/CommentsApiContractContent.js",
+        "js/CommentsAuthIdentityContent.js",
+        "js/CommentsDeploymentKitContent.js",
+        "js/CommentsDomAnchorContent.js"
+      ],
+      "pageFilesSample": [
+        "js/comments/AdminTestPage.js",
+        "js/comments/MaintenancePage.js",
+        "js/comments/SimpleTestPage.js"
+      ]
+    },
+    {
+      "name": "Community",
+      "mainClass": "CommunityApp",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "DictationExperiment",
+      "mainClass": "DictationExperiment",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "DictationLab",
+      "mainClass": "DictationLab",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Es6Converter",
+      "mainClass": "LunoEs6Converter",
+      "entrypointMethod": "mountUI",
+      "features": {},
+      "usesLunoLoader": false,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "FallingWater",
+      "mainClass": "FallingWater",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "FindTheDifferenceCheater",
+      "mainClass": "FindTheDifferenceCheater",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "FourDFun",
+      "mainClass": "FourDFun",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "FunInFourD",
+      "mainClass": "FunInFourD",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "GameTheoryStory",
+      "mainClass": "GameTheoryStory",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "House",
+      "mainClass": "House",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "House1",
+      "mainClass": "House",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "House2",
+      "mainClass": "House",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "House3",
+      "mainClass": "House",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "House4",
+      "mainClass": "House",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Hypercube",
+      "mainClass": "Hypercube",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "LegoDetective",
+      "mainClass": "LegoFun",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "LunoParser",
+      "mainClass": "LunoTestRunner",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 2
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "MathStorm",
+      "mainClass": "MathStorm",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Penrose",
+      "mainClass": "Penrose",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "PleasureAndPain",
+      "mainClass": "PleasureAndPain",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "RunOnServerTools",
+      "mainClass": "RunOnServerTools",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "SvgStudio",
+      "mainClass": "LunoSvgStudio",
+      "entrypointMethod": "mountUI",
+      "features": {},
+      "usesLunoLoader": false,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "TaxChart",
+      "mainClass": "TaxChart",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "TouchController",
+      "mainClass": "TouchController",
+      "entrypointMethod": "run",
+      "features": {
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1,
+        "DictationWidget": 1,
+        "manifestFn": 4,
+        "getMetaFn": 4
+      },
+      "usesLunoLoader": false,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Trippy",
+      "mainClass": "Trippy",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Truck",
+      "mainClass": "Truck",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "Voting",
+      "mainClass": "RankedChoiceApp",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "aardvarkBookmarklet",
+      "mainClass": "AardvarkBookmarkletApp",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "guessTheNoteGame",
+      "mainClass": "GuessTheNoteGame",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "junk",
+      "mainClass": "Junk",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "pianorolls",
+      "mainClass": null,
+      "entrypointMethod": null,
+      "features": {},
+      "usesLunoLoader": false,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "squircle",
+      "mainClass": "Squircle",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "teacup",
+      "mainClass": "Teacup",
+      "entrypointMethod": "run",
+      "features": {
+        "LunoLoader": 1
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    },
+    {
+      "name": "vibes",
+      "mainClass": "ProjectEditorApp",
+      "entrypointMethod": "run",
+      "features": {
+        "manifestFn": 1,
+        "LunoLoader": 1,
+        "DictationWidget": 2
+      },
+      "usesLunoLoader": true,
+      "contentFilesSample": [],
+      "pageFilesSample": []
+    }
+  ],
+  "linkedDocProjects": [
+    {
+      "name": "CadPlan",
+      "mainClass": "CadPlan",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "ThreeJSLoader.js",
+        "DocumentReader.js",
+        "VideoPlayer.js",
+        "DictationWidget.js",
+        "SliderControl.js",
+        "ColorPicker.js",
+        "KeyCommandHandler.js",
+        "SidePanel.js",
+        "CodeMirrorWidget.js",
+        "CommunityOracle.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "DocumentReader": 3,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 3,
+        "CadPlanDocumentEditor": 1,
+        "manifestFn": 20,
+        "dataBlockAttr": 16,
+        "LunoLoader": 2,
+        "getMetaFn": 18,
+        "DictationWidget": 2
+      }
+    },
+    {
+      "name": "EconomicsOfAutomation",
+      "mainClass": "EconomicsOfAutomation",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "DocumentReader.js",
+        "SidePanel.js",
+        "DictationWidget.js",
+        "CommunityOracle.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "dataBlockAttr": 4,
+        "LunoLoader": 1,
+        "manifestFn": 10,
+        "getMetaFn": 10,
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1
+      }
+    },
+    {
+      "name": "HomeSetup",
+      "mainClass": "HomeSetup",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "ThreeJSLoader.js",
+        "DocumentReader.js",
+        "DictationWidget.js",
+        "SidePanel.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "DocumentReader": 6,
+        "CadPlanAardvark": 4,
+        "CadPlanItemNotes": 5,
+        "CadPlanDocumentEditor": 3,
+        "manifestFn": 9,
+        "LunoLoader": 3,
+        "DictationWidget": 7,
+        "getMetaFn": 8,
+        "PartialDocumentEngine": 3,
+        "SensitiveContextGate": 1
+      }
+    },
+    {
+      "name": "JobsAndAI",
+      "mainClass": "JobsAndAI",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "VideoPlayer.js",
+        "DictationWidget.js",
+        "DocumentReader.js",
+        "SidePanel.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "LunoLoader": 1,
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1,
+        "dataBlockAttr": 1
+      }
+    },
+    {
+      "name": "Library",
+      "mainClass": null,
+      "entrypointMethod": null,
+      "usesLunoLoader": true,
+      "libraryDeps": [],
+      "features": {
+        "DocumentReader": 4,
+        "CadPlanAardvark": 2,
+        "CadPlanItemNotes": 4,
+        "CadPlanDocumentEditor": 4,
+        "dataBlockAttr": 4,
+        "DictationWidget": 5,
+        "Comments": 1,
+        "PartialDocumentEngine": 3,
+        "SensitiveContextGate": 3,
+        "LunoLoader": 3,
+        "manifestFn": 1,
+        "getMetaFn": 1
+      }
+    },
+    {
+      "name": "Luno",
+      "mainClass": "ClientApp",
+      "entrypointMethod": "init",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "GlowingTooltip.js",
+        "DictationWidget.js"
+      ],
+      "features": {
+        "LunoLoader": 10,
+        "CadPlanItemNotes": 1,
+        "DictationWidget": 1
+      }
+    },
+    {
+      "name": "Opus",
+      "mainClass": "Opus",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "DocumentReader.js",
+        "DictationWidget.js",
+        "SidePanel.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js",
+        "SensitiveContextGate.js"
+      ],
+      "features": {
+        "DocumentReader": 3,
+        "CadPlanAardvark": 2,
+        "CadPlanItemNotes": 3,
+        "CadPlanDocumentEditor": 2,
+        "manifestFn": 8,
+        "LunoLoader": 1,
+        "DictationWidget": 2,
+        "getMetaFn": 7,
+        "SensitiveContextGate": 2
+      }
+    },
+    {
+      "name": "Portal",
+      "mainClass": "Portal",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "GlowingTooltip.js",
+        "DictationWidget.js",
+        "SidePanel.js",
+        "CommunityOracle.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js",
+        "SensitiveContextGate.js",
+        "PartialDocumentEngine.js",
+        "DocumentReader.js"
+      ],
+      "features": {
+        "DocumentReader": 3,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1,
+        "PartialDocumentEngine": 3,
+        "SensitiveContextGate": 5,
+        "LunoLoader": 2,
+        "manifestFn": 3,
+        "getMetaFn": 3,
+        "dataBlockAttr": 1,
+        "DictationWidget": 2
+      }
+    },
+    {
+      "name": "QuoraToys",
+      "mainClass": "QuoraToysApp",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "DocumentReader.js",
+        "SidePanel.js",
+        "ColorPicker.js",
+        "DictationWidget.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "DictationWidget": 1,
+        "CadPlanItemNotes": 4,
+        "LunoLoader": 1,
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanDocumentEditor": 1,
+        "manifestFn": 2,
+        "getMetaFn": 1
+      }
+    },
+    {
+      "name": "ValuationOfAccudraw",
+      "mainClass": "ValuationOfAccudraw",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "DictationWidget.js",
+        "DocumentReader.js",
+        "SidePanel.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "LunoLoader": 1,
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1
+      }
+    },
+    {
+      "name": "accuCad",
+      "mainClass": "Main",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "AppColorUtils.js",
+        "ColorPicker.js",
+        "HueRingCP.js",
+        "KeyCommandHandler.js",
+        "MidiInputHandler.js",
+        "P2PConnector.js",
+        "QRCodeGenerator.js",
+        "PopupBox.js",
+        "SidePanel.js",
+        "SliderControl.js",
+        "SpinnerWidget.js",
+        "ThreeJSLoader.js",
+        "TriangleCP.js",
+        "UITools.js",
+        "DomBasics.js"
+      ],
+      "features": {
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1,
+        "DictationWidget": 1,
+        "LunoLoader": 1,
+        "manifestFn": 4,
+        "getMetaFn": 4
+      }
+    },
+    {
+      "name": "accudraw",
+      "mainClass": "AccuDrawArchiveApp",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "DictationWidget.js",
+        "DocumentReader.js",
+        "SidePanel.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js"
+      ],
+      "features": {
+        "LunoLoader": 1,
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1,
+        "dataBlockAttr": 1
+      }
+    },
+    {
+      "name": "situation",
+      "mainClass": "SituationApp",
+      "entrypointMethod": "run",
+      "usesLunoLoader": true,
+      "libraryDeps": [
+        "DomBasics.js",
+        "UITools.js",
+        "VideoPlayer.js",
+        "DictationWidget.js",
+        "DocumentReader.js",
+        "SidePanel.js",
+        "SupabaseCommentsAdapter.js",
+        "CadPlanDataRegistry.js",
+        "CadPlanItemNotes.js",
+        "CadPlanDocumentEditor.js",
+        "CadPlanAardvark.js",
+        "SensitiveContextGate.js"
+      ],
+      "features": {
+        "LunoLoader": 1,
+        "SensitiveContextGate": 3,
+        "DocumentReader": 1,
+        "CadPlanAardvark": 1,
+        "CadPlanItemNotes": 1,
+        "CadPlanDocumentEditor": 1,
+        "dataBlockAttr": 1
+      }
+    }
+  ],
+  "keyFilesOnDisk": {
+    "Library/LunoLoader.js": {
+      "exists": true,
+      "bytes": 18276,
+      "lines": 465,
+      "methods": [
+        "isStaticHosting",
+        "getLibraryBaseUrl",
+        "fetchText",
+        "extractClassNames",
+        "loadScriptTag",
+        "loadApp",
+        "renderEmergencyCockpit",
+        "renderDiagnosticScreen",
+        "resolveScriptUrl",
+        "loadScript",
+        "loadStylesheet",
+        "loadScriptsInOrder",
+        "lazyLoad",
+        "ensureCommentsLoaded",
+        "ensurePartialEngineLoaded",
+        "loadProjectIntoSpa",
+        "unloadSpaStyles"
+      ],
+      "head": "class LunoLoader {\n  static loadedUrls = new Set();\n\n  static RESERVED_WORDS = new Set([\n    'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default',\n    'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function',\n    'if', 'import', 'in', 'instanceof', 'new', 'return', 'super', 'switch',\n    'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield',\n    'let', 'static', 'enum', 'await', 'null', 'true', 'false', 'undefined'\n  ]);\n\n  static isStaticHosting() {\n    try {\n      if (typeof window !== 'undefined' && window.location) {\n        const proto = window.location.protocol || '';\n        if (proto === 'file:') return true;\n        const host = (window.location.hostname || '').toLowerCase();\n        if (host.endsWith('github.io') || host.endsWith('pages.dev') || host.endsWith('vercel.app')) return true;\n      }\n    } catch(e) {}\n    return false;\n  }\n\n  static getLibraryBaseUrl() {\n    try {\n      if (typeof window !== 'undefined' && window.location && window.location.hostname) {\n        const host = window.location.hostname.toLowerCase();\n        if (host.endsWith('.github.io')) {\n          const user = host.split('.')[0];\n          return `https://${user}.github.io/Library/`;\n        }\n      }\n    } catch(e) {}\n    return '/Library/';\n  }\n\n  static async fetchText(url) {\n    const res = await fetch(url);\n    if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);\n    return await res.text();\n  }\n\n  static extractClassNames(codeText) {\n    if (!codeText || typeof codeText !== 'string') return [];\n    const classNames = [];\n    const matches = codeText.matchAll(/(?:^|\\n|\\r)\\s*(?:export\\s+)?class\\s+([A-Za-z0-9_$]+)/g);\n    for (const m of matches) {\n      const name = m[1];\n      if (name && !LunoLoader.RESERVED_WORDS.has(name)) {\n        classNames.push(name);\n      }\n    }\n    return classNames;\n  }\n\n  static loadScriptTag(url, classNames = []) {\n    const cleanUrl = url.split('?')[0];\n    if (LunoLoader.loadedUrls.has(cleanUrl)) {\n      return Promise.resolve({ success: true, url, cached: true });\n    }\n    LunoLoader.loadedUrls.add(cleanUrl);\n\n    return new Promise((resolve) => {\n      const script = document.createElement('script');\n      script.src = url;\n      script.async = false;\n\n      script.onload = () => {\n        for (const cls of classNames) {\n          if (!LunoLoader.RESERVED_WORDS.has(cls)) {\n            try {\n              const val = eval(cls);\n              if (typeof val !== 'undefined') {\n                globalThis[cls] = val;\n                window[cls] = val;\n              }\n            } catch (e) {}\n          }\n        }\n        resolve({ success: true, url });\n      };\n\n      script.onerror = () => {\n        console.warn(`[LunoLoader] Error loading script: ${url}`);\n        resolve({ success: false, url });\n      };\n\n      document.head.appendChild(script);\n    });\n  }\n\n  static async loadApp(containerId) {\n      try {\n        var cId = containerId || 'app-container';\n        var meta = null;\n\n        var base = window.location.origin + window.location.pathname;\n        if (!base.endsWith('/')) {\n          base = base.substring(0, base.lastIndexOf('/') + 1);\n        }\n\n        try {\n          var res = await fetch(base + 'luno.json?v=' + Date.now());\n          if (res.ok) meta = await res.json();\n        } catch (e) {}\n\n        if (!meta) {\n          try {\n            var resFallback = await fetch('./luno.json?v=' + Date.now());\n            if (resFallback.ok) meta = await resFallback.json();\n          } catch (e2) {}\n        }\n\n        if (!meta) {\n          throw new Error('Could not load luno.json for application.');\n        }\n\n        const statusMsg = document.getElementById('aardvark-boot-msg');\n        const updateBootStatus = (txt) => {\n          if (statusMsg) statusMsg.textContent = txt;\n        };\n\n        // 1. Prepare shared library dependencies & styles\n        var libs = Array.isArray(meta.library) ? meta.library : [];\n        var libUrls = libs.map(lib => LunoLoader.resolveScriptUrl('Library/' + lib));\n\n        var styles = Array.isArray(meta.styles) ? meta.styles : [];\n        for (var s = 0; s < styles.length; s++) {\n          var styleUrl = LunoLoader.resolveScriptUrl(styles[s]);\n          LunoLoader.loadStylesheet(styleUrl);\n        }\n\n        // Load library scripts in parallel\n        updateBootStatus('Loading core libraries...');\n        await LunoLoader.loadScriptsInOrder(libUrls);\n\n        // Ensure DOM primitives are live\n        if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n          DomBasics.run();\n        }\n\n        // 2. Load main application scripts in parallel\n        var scripts = Array.isArray(meta.main) ? meta.main : [];\n        var mainUrls = scripts.map(s => LunoLoader.resolveScriptUrl(s));\n\n        updateBootStatus('Loading player interface...');\n        await LunoLoader.loadScriptsInOrder(mainUrls, (cur, total) => {\n          updateBootStatus(`Loading player components (${cur}/${total})...`);\n        });\n\n        // 3. Apply patch log if present\n        try {\n          await LunoLoader.applyPatchLog(meta.name);\n        } catch (plErr) {}\n\n        // 4. Mount entrypoint\n        var entry = meta.entrypoint || {};\n        var clsName = entry.class || meta.mainClass || 'Main';\n        var mthName = entry.method || 'run';\n\n        var EntryClass = globalThis[clsName] || window[clsName];\n        if (!EntryClass) {\n          throw new Error('Entrypoint class [' + clsName + '] not found in loaded scope.');\n        }\n\n        var container = document.getElementById(cId) || document.body;\n        var inst = new EntryClass();\n\n        updateBootStatus('Launching...');\n        if (typeof inst[mthName] === 'function') {\n          await inst[mthName]({ container: container, meta: meta });\n        } else if (typeof EntryClass[mthName] === 'function') {\n          await EntryClass[mthName]({ container: container, meta: meta });\n        }\n\n      } catch (err) {\n        console.error('[LunoLoader Exception]', err);\n        var box = document.getElementById(containerId || 'app-container') || document.body;\n        box.innerHTML = '<div style=\"padding:1.5rem; background:#2c080a; color:#ff7b72; border:2px solid #f85149; border-radius:8px; font-family:monospace; margin:1rem;\"><h3>⚠️ Application Load Error</h3><pre>' + err.message + '\\n' + (err.stack || '') + '</pre></div>';\n      }\n    }\n  static renderEmergencyCockpit(containerId, missingClass, meta) {\n    const container = document.getElementById(containerId) || document.body;\n    container.innerHTML = `\n      <div style=\"padding: 1.5rem; background: #161b22; border: 2px solid #da3633; border-radius: 10px; max-width: 680px; margin: 2rem auto; font-family: monospace; color: #c9d1d9; box-shadow: 0 8px 32px rgba(0,0,0,0.8);\">\n        <h3 style=\"color: #ff7b72; margin-top: 0;\">❌ Failed to Launch Application</h3>\n        <p style=\"font-size: 13px;\">Entrypoint class <strong style=\"color: #00f2fe;\">[${missingClass}]</strong> was not found in global scope.</p>\n        <p style=\"font-size: 12px; color: #8b949e;\">Loaded ${meta.local ? meta.local.length : 0} local file(s) and ${meta.library ? meta.library.length : 0} library module(s).</p>\n      </div>\n    `;\n  }\n\n  static renderDiagnosticScreen(containerId, err) {\n    const container = document.getElementById(containerId) || document.body;\n    container.innerHTML = `\n      <div style=\"padding: 1.5rem; background: #2c080a; border: 2px solid #f85149; border-radius: 10px; max-width: 680px; margin: 2rem auto; font-family: monospace; color: #ff7b72;\">\n        <h3 style=\"margin-top: 0;\">⚠️ Application Initialization Error</h3>\n        <pre style=\"background: #0d1117; padding: 1rem; border-radius: 6px; overflow-x: auto; color: #ff7b72; font-size: 12px;\">${err.stack || err.message}</pre>\n      </div>\n    `;\n  }\n\n  static resolveScriptUrl(scriptPath) {\n      if (!scriptPath || typeof scriptPath !== 'string') return '';\n      var clean = scriptPath.replace(/\\\\/g, '/').trim();\n\n      if (clean.startsWith('http://') || clean.startsWith('https://')) {\n        return clean;\n      }\n\n      var account = (typeof window !== 'undefined' && window.location && window.location.hostname.endsWith('.github.io'))\n        ? window.location.hostname.split('.')[0]\n        : 'karmatics';\n      var isGh = (typeof window !== 'undefined' && window.location && window.location.hostname.endsWith('.github.io'));\n\n      if (clean.startsWith('../')) {\n        var relSibling = clean.replace(/^\\.\\.\\//, '');\n        return isGh ? 'https://' + account + '.github.io/' + relSibling : '/' + relSibling;\n      }\n\n      if (clean.startsWith('Library/') || clean.startsWith('/Library/') || clean.startsWith('library/') || clean.startsWith('/library/')) {\n        var libPath = clean.replace(/^\\/?(?:Library|library)\\//, '');\n        return isGh ? 'https://' + account + '.github.io/Library/' + libPath : '/Library/' + libPath;\n      }\n\n      if (cl"
+    },
+    "Comments/js/MockServerAPI.js": {
+      "exists": true,
+      "bytes": 20394,
+      "lines": 605,
+      "methods": [
+        "constructor",
+        "_simulateNetworkDelay",
+        "_seedInitialData",
+        "getThreadData",
+        "getOrCreateUser",
+        "postComment",
+        "rebuildAndSeed",
+        "getCurrentUser",
+        "updateUserDisplayName",
+        "_parseSampleComments",
+        "adminSeedComment",
+        "registerUser",
+        "loginUser",
+        "submitRating",
+        "setPassword",
+        "getSharedInstance",
+        "subscribe",
+        "_notifySubscribers",
+        "_persistDb",
+        "editComment",
+        "deleteComment",
+        "setThreadStatus",
+        "registerThreadMeta",
+        "getAllThreadsSummary"
+      ],
+      "head": "class MockServerAPI {\r\n  constructor() {\r\n    this.db = { users: [], threads: { main: [] } }; // Changed comments to threads map\r\n    this.currentUser = null;\r\n\r\n    this.serverUserManager = {\r\n      usersByNormalizedName: new Map(),\r\n      usersById: new Map(),\r\n      _normalizeName: (name) =>\r\n        (name || '')\r\n          .toLowerCase()\r\n          .normalize('NFD')\r\n          .replace(/[\\u0300-\\u036f]/g, ''),\r\n      getOrCreateUser: (displayName) => {\r\n        if (!displayName || !displayName.trim()) {\r\n          throw new Error('Invalid username. Name cannot be empty.');\r\n        }\r\n        const normalized = this.serverUserManager._normalizeName(displayName);\r\n        const existingUsers =\r\n          this.serverUserManager.usersByNormalizedName.get(normalized) || [];\r\n\r\n        const existingUser = existingUsers.find(\r\n          (u) => u.displayName === displayName\r\n        );\r\n\r\n        if (existingUser) {\r\n          if (normalized === 'rob' && !existingUser.avatarUrl) {\r\n            existingUser.avatarUrl =\r\n              'https://recursi.dev/userThumbnails/rob1.png';\r\n            existingUser.avatarUrlL =\r\n              'https://recursi.dev/userThumbnails/rob1_L.png';\r\n          }\r\n          return existingUser;\r\n        }\r\n\r\n        const suffix = existingUsers.length + 1;\r\n        const id = `${normalized}${suffix}`;\r\n        const newUser = {\r\n          id,\r\n          displayName,\r\n          normalizedName: normalized,\r\n          suffix,\r\n        };\r\n\r\n        if (normalized === 'rob') {\r\n          newUser.avatarUrl = 'https://recursi.dev/userThumbnails/rob1.png';\r\n          newUser.avatarUrlL = 'https://recursi.dev/userThumbnails/rob1_L.png';\r\n        }\r\n\r\n        existingUsers.push(newUser);\r\n        this.serverUserManager.usersByNormalizedName.set(\r\n          normalized,\r\n          existingUsers\r\n        );\r\n        this.serverUserManager.usersById.set(id, newUser);\r\n        this.db.users.push(newUser);\r\n        return newUser;\r\n      },\r\n      reset: () => {\r\n        this.serverUserManager.usersByNormalizedName.clear();\r\n        this.serverUserManager.usersById.clear();\r\n      },\r\n    };\r\n\r\n    this.initialized = this._seedInitialData();\r\n  }\n\n  _simulateNetworkDelay(resolveValue, delay = 0) {\n      if (!delay || delay <= 0) {\n        return Promise.resolve(resolveValue);\n      }\n      return new Promise((resolve) => {\n        setTimeout(() => resolve(resolveValue), delay);\n      });\n    }\n\n  async _seedInitialData() {\n      this.db = { users: [], threads: {}, threadMeta: {} };\n      this.currentUser = null;\n\n      if (typeof CommunityOracle !== 'undefined') {\n        const profiles = CommunityOracle.getAllProfiles();\n        this.db.users = profiles.map(p => ({\n          id: p.id,\n          displayName: p.name,\n          normalizedName: p.name.toLowerCase().replace(/[^a-z0-9]/g, ''),\n          suffix: p.tag,\n          reputation: p.reputation,\n          badges: p.badges || []\n        }));\n      } else {\n        this.db.users = [\n          { id: 'u_rob', displayName: 'Rob Brown', suffix: 1001, reputation: 0.98, badges: ['Architect', 'Verified'] },\n          { id: 'u_sarah', displayName: 'Sarah', suffix: 1002, reputation: 0.88, badges: ['Top Reviewer'] },\n          { id: 'u_dave1', displayName: 'Dave', suffix: 1042, reputation: 0.72, badges: ['Contributor'] },\n          { id: 'u_dave2', displayName: 'Dave', suffix: 1005, reputation: 0.65, badges: ['Active'] },\n          { id: 'u_alex', displayName: 'Alex', suffix: 1088, reputation: 0.45, badges: ['Probationary'] }\n        ];\n      }\n\n      let loadedFromStorage = false;\n      if (typeof localStorage !== 'undefined') {\n        try {\n          const raw = localStorage.getItem('comments_local_db_v1');\n          if (raw) {\n            const parsed = JSON.parse(raw);\n            if (parsed && typeof parsed === 'object') {\n              if (Array.isArray(parsed.users) && parsed.users.length > 0) {\n                const knownIds = new Set(this.db.users.map(u => u.id));\n                parsed.users.forEach(u => { if (!knownIds.has(u.id)) this.db.users.push(u); });\n              }\n              this.db.threads = parsed.threads || {};\n              this.db.threadMeta = parsed.threadMeta || {};\n              if (parsed.currentUserId) {\n                this.currentUser = this.db.users.find(u => u.id === parsed.currentUserId) || this.db.users[0];\n              }\n              loadedFromStorage = true;\n            }\n          }\n        } catch (e) {}\n      }\n\n      const now = Date.now();\n      if (!this.db.threads['main']) {\n        this.db.threads['main'] = [\n          {\n            id: 'c_seed_1',\n            userId: 'u_rob',\n            text: 'Welcome to the unified Comments system. Identity and web-of-trust reputation are now governed directly by CommunityOracle.',\n            timestamp: new Date(now - 7200000).toISOString(),\n            prominence: 98,\n            score: 28,\n            children: [\n              {\n                id: 'c_seed_2',\n                userId: 'u_sarah',\n                text: 'Notice that upvotes are weighted by reputation weight. A vote from an Architect carries more prominence than unverified accounts.',\n                timestamp: new Date(now - 5400000).toISOString(),\n                prominence: 88,\n                score: 14,\n                children: []\n              }\n            ]\n          }\n        ];\n      }\n\n      // One-time seamless migration of active legacy notes into real Comment threads\n      if (typeof localStorage !== 'undefined' && !localStorage.getItem('comments_migrated_legacy_notes_v1')) {\n        try {\n          const rawCad = localStorage.getItem('cadplan_item_notes_v1');\n          const rawCmt = localStorage.getItem('comments_item_notes_v1');\n          const combined = Object.assign({}, rawCad ? JSON.parse(rawCad) : {}, rawCmt ? JSON.parse(rawCmt) : {});\n          Object.values(combined).forEach(arr => {\n            if (!Array.isArray(arr)) return;\n            arr.forEach(n => {\n              if (!n || n.status === 'resolved' || !n.text) return;\n              const dId = n.dossierId || 'Document';\n              const pId = n.pageId || 'overview';\n              const bId = n.blockId || 'block';\n              const tId = `doc_${dId}_${pId}_${bId}`.replace(/[^a-zA-Z0-9_-]/g, '_');\n              this.db.threads[tId] = this.db.threads[tId] || [];\n              if (!this.db.threads[tId].some(c => c.id === n.id)) {\n                this.db.threads[tId].push({\n                  id: n.id,\n                  userId: 'u_rob',\n                  text: n.text,\n                  timestamp: new Date(n.timestamp || now).toISOString(),\n                  prominence: 95,\n                  children: []\n                });\n              }\n              this.db.threadMeta[tId] = this.db.threadMeta[tId] || {\n                threadId: tId,\n                dossierId: dId,\n                pageId: pId,\n                blockId: bId,\n                enclosingBlockId: n.enclosingBlockId || null,\n                blockPreview: n.blockPreview || '',\n                xpath: n.xpath || null,\n                tagName: n.tagName || null,\n                status: 'active',\n                updatedAt: n.timestamp || now\n              };\n            });\n          });\n          localStorage.setItem('comments_migrated_legacy_notes_v1', 'true');\n        } catch (e) {}\n      }\n\n      if (!this.currentUser) {\n        this.currentUser = this.db.users[0] || { id: 'u_rob', displayName: 'Rob Brown', suffix: 1001, reputation: 0.98 };\n      }\n      if (!loadedFromStorage) {\n        this._persistDb();\n      }\n    }\n  async getThreadData(threadId = 'main') {\r\n    await this.initialized;\r\n\r\n    // Auto-initialize thread if it doesn't exist in mock\r\n    if (!this.db.threads[threadId]) {\r\n      this.db.threads[threadId] = [];\r\n    }\r\n\r\n    const data = {\r\n      success: true,\r\n      users: JSON.parse(JSON.stringify(this.db.users)),\r\n      comments: JSON.parse(JSON.stringify(this.db.threads[threadId])),\r\n    };\r\n    return this._simulateNetworkDelay(data);\r\n  }\r\n\r\n  async getOrCreateUser(displayName) {\r\n    await this.initialized;\r\n    try {\r\n      const user = this.serverUserManager.getOrCreateUser(displayName);\r\n      this.currentUser = user; // Set the 'session' user\r\n      return this._simulateNetworkDelay({\r\n        success: true,\r\n        user: JSON.parse(JSON.stringify(user)),\r\n      });\r\n    } catch (error) {\r\n      return this._simulateNetworkDelay({\r\n        success: false,\r\n        error: error.message,\r\n      });\r\n    }\r\n  }\n\n  async postComment({ parentId, userId, text, threadId = 'main', meta = null }) {\n      await this.initialized;\n      if (!userId || !text) {\n        return this._simulateNetworkDelay({\n          success: false,\n          error: 'User and text are required.'\n        });\n      }\n\n      if (!this.db.threads[threadId]) {\n        this.db.threads[threadId] = [];\n      }\n\n      const newComment = {\n        id: `comment-${Date.now()}-${Math.random().toStrin"
+    },
+    "Comments/js/ServerAPI.js": {
+      "exists": true,
+      "bytes": 9011,
+      "lines": 256,
+      "methods": [
+        "constructor",
+        "_resolveDefaultEndpoint",
+        "setBaseUrl",
+        "getThreadData",
+        "getOrCreateUser",
+        "postComment",
+        "getCurrentUser",
+        "updateUserDisplayName",
+        "clearAllData",
+        "deleteComment",
+        "submitRating",
+        "setPassword",
+        "editComment"
+      ],
+      "head": "class ServerAPI {\n  /**\n   * Modern Serverless Network Transport for Comments.\n   * Connects to PostgreSQL / Supabase REST endpoints or serverless workers.\n   * Completely retired legacy DreamHost PHP endpoints.\n   */\n  constructor(baseUrl = '') {\n    this.baseUrl = baseUrl || this._resolveDefaultEndpoint();\n    this.useMockFallback = true;\n  }\n\n  _resolveDefaultEndpoint() {\n    if (typeof localStorage !== 'undefined') {\n      const stored = localStorage.getItem('comments_supabase_url');\n      if (stored) return stored;\n    }\n    return '';\n  }\n\n  setBaseUrl(url, apiKey = null) {\n      if (url && typeof url === 'string') {\n        this.baseUrl = url.trim().replace(/\\/+$/, '');\n        if (typeof localStorage !== 'undefined') {\n          localStorage.setItem('comments_supabase_url', this.baseUrl);\n        }\n      }\n      if (apiKey && typeof apiKey === 'string') {\n        if (typeof localStorage !== 'undefined') {\n          localStorage.setItem('comments_supabase_key', apiKey.trim());\n        }\n      }\n    }\n\n  async getThreadData(threadId = 'main') {\n      const supabaseUrl = this.baseUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_url') : '');\n      const supabaseKey = typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_key') : '';\n\n      if (!supabaseUrl || !supabaseKey) {\n        return await MockServerAPI.getSharedInstance().getThreadData(threadId);\n      }\n\n      try {\n        const endpoint = `${supabaseUrl}/rest/v1/comments?page_id=eq.${encodeURIComponent(threadId)}&select=*,profiles(*)&order=created_at.asc`;\n        const res = await fetch(endpoint, {\n          method: 'GET',\n          headers: {\n            'apikey': supabaseKey,\n            'Authorization': `Bearer ${supabaseKey}`,\n            'Content-Type': 'application/json'\n          }\n        });\n\n        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);\n        const rawRows = await res.json();\n\n        const usersMap = new Map();\n        const nodesMap = new Map();\n        const roots = [];\n\n        rawRows.forEach(row => {\n          const author = row.profiles || { display_name: 'Anonymous', tag: 1001, id: row.author_id };\n          if (!usersMap.has(author.id)) {\n            usersMap.set(author.id, {\n              id: author.id,\n              displayName: author.display_name,\n              suffix: author.tag,\n              reputation: 0.5\n            });\n          }\n\n          const node = {\n            id: row.id,\n            userId: row.author_id,\n            text: row.body,\n            timestamp: row.created_at,\n            prominence: row.score !== undefined ? row.score : 80,\n            children: [],\n            parentId: row.parent_id\n          };\n          nodesMap.set(node.id, node);\n        });\n\n        nodesMap.forEach(node => {\n          if (node.parentId && nodesMap.has(node.parentId)) {\n            nodesMap.get(node.parentId).children.push(node);\n          } else {\n            roots.push(node);\n          }\n        });\n\n        return {\n          success: true,\n          users: Array.from(usersMap.values()),\n          comments: roots\n        };\n      } catch (err) {\n        console.warn('[ServerAPI] Supabase cloud fetch notice, falling back to local store:', err.message);\n        return await MockServerAPI.getSharedInstance().getThreadData(threadId);\n      }\n    }\n  async getOrCreateUser(displayName) {\n    if (typeof CommunityOracle !== 'undefined') {\n      const prof = CommunityOracle.addOrUpdateProfile({ name: displayName });\n      return {\n        success: true,\n        user: {\n          id: prof.id,\n          displayName: prof.name,\n          normalizedName: prof.name.toLowerCase().replace(/[^a-z0-9]/g, ''),\n          suffix: prof.tag,\n          reputation: prof.reputation,\n          badges: prof.badges || []\n        }\n      };\n    }\n    return {\n      success: true,\n      user: {\n        id: `u_${displayName.toLowerCase()}`,\n        displayName,\n        suffix: 1001,\n        reputation: 0.5\n      }\n    };\n  }\n\n  async postComment({ parentId, userId, text, threadId = 'main', meta = null }) {\n      const supabaseUrl = this.baseUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_url') : '');\n      const supabaseKey = typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_key') : '';\n\n      if (!supabaseUrl || !supabaseKey) {\n        return await MockServerAPI.getSharedInstance().postComment({ parentId, userId, text, threadId, meta });\n      }\n\n      try {\n        const endpoint = `${supabaseUrl}/rest/v1/comments`;\n        const res = await fetch(endpoint, {\n          method: 'POST',\n          headers: {\n            'apikey': supabaseKey,\n            'Authorization': `Bearer ${supabaseKey}`,\n            'Content-Type': 'application/json',\n            'Prefer': 'return=representation'\n          },\n          body: JSON.stringify({\n            page_id: threadId,\n            parent_id: pare"
+    },
+    "Comments/js/Comments.js": {
+      "exists": true,
+      "bytes": 32560,
+      "lines": 857,
+      "methods": [
+        "constructor",
+        "run",
+        "run",
+        "_buildSidePanelNavigation",
+        "selectChapter",
+        "destroy",
+        "createPostBox",
+        "setCurrentUser",
+        "toggleDebugMode",
+        "toggleGlobalSortOrder",
+        "_showTopLevelPostButton",
+        "_showTopLevelPostBox",
+        "loadInitialData",
+        "_updatePostBoxHeader",
+        "_updateAllUserDisplays",
+        "closeAllPopups",
+        "setActiveReplyController",
+        "applyTheme",
+        "init",
+        "showAuthDialog",
+        "showPrivateWhisperInbox",
+        "renderDemoBanner"
+      ],
+      "head": "class Comments {\n  constructor() {\n    this.container = null;\n    this.commentView = null;\n    this.userManager = new UserManager();\n    this.styles = new CommentStyles();\n\n    this.serverAPI = new MockServerAPI();\n    this.apiMode = 'mock';\n\n    this.currentUser = null;\n    this.appContainer = null;\n    this.isDebugMode = false;\n    this.globalSortOrder = 'newest';\n    this.topLevelPostBoxContainer = null;\n    this.userAccountDialog = new UserAccountDialog(this);\n    this.activeReplyController = null;\n    this.threadId = 'main';\n    this.toolbar = new CommentToolbar(this);\n  }\n\n  static async run(env) {\n    const instance = new Comments();\n    return await instance.run(env);\n  }\n\n  async run(env) {\n      if (!env || !env.container) {\n        throw new Error('[Comments] run() requires an environment with a valid container.');\n      }\n\n      if (this.rootElement) {\n        this.destroy();\n      }\n\n      this.env = env;\n      this.rootElement = env.container;\n      this.rootElement.innerHTML = '';\n      this.rootElement.style.overflowY = 'auto';\n      this.rootElement.style.minHeight = '100vh';\n      this.rootElement.style.boxSizing = 'border-box';\n      this.rootElement.style.transition = 'margin-left 0.25s cubic-bezier(0.2, 0.0, 0.2, 1), width 0.25s cubic-bezier(0.2, 0.0, 0.2, 1)';\n\n      // Sync Community profiles\n      if (typeof CommunityOracle !== 'undefined' && typeof CommunityOracle.loadProfiles === 'function') {\n        CommunityOracle.loadProfiles();\n      }\n\n      const pages = [\n        { id: 'overview', title: '0. Architecture & Modern Horizon', docClass: () => globalThis.CommentsOverviewContent },\n        { id: 'styling', title: '1. Styling, Theming & Micro-Threads', docClass: () => globalThis.CommentsStylingContent },\n        { id: 'identity', title: '2. Identity: Anonymous-First & Discriminators', docClass: () => globalThis.CommentsAuthIdentityContent },\n        { id: 'threading', title: '3. Trees, Prominence & Weighted Reputation', docClass: () => globalThis.CommentsThreadingContent },\n        { id: 'api_contract', title: '4. Supabase & Serverless API Contract', docClass: () => globalThis.CommentsApiContractContent },\n        { id: 'dom_anchoring', title: '5. Universal DOM Anchoring & Aardvark', docClass: () => globalThis.CommentsDomAnchorContent },\n        { id: 'ai_moderation', title: '6. AI Moderation & Prominence Spectrum', docClass: () => globalThis.CommentsAiModerationContent },\n        { id: 'federation', title: '7. Federation, Shared Reputation & Scale', docClass: () => globalThis.CommentsFederationContent },\n        { id: 'deployment_kit', title: '8. Drop-In Deployment Kit & Prompt Generator', docClass: () => globalThis.CommentsDeploymentKitContent }\n      ];\n\n      if (typeof DocumentReader !== 'undefined') {\n        this.reader = new DocumentReader({\n          container: this.rootElement,\n          brandTitle: 'Comments System & Community Oracle',\n          brandIcon: '💬',\n          dossierId: 'Comments',\n          pages: pages\n        });\n        await this.reader.init();\n\n        if (typeof SidePanel !== 'undefined') {\n          this.sidePanel = new SidePanel('left', 340, null);\n          this._buildSidePanelNavigation(pages);\n\n          this._safeAreaHandler = (e) => {\n            const left = e.detail?.left || 0;\n            if (this.rootElement) {\n              this.rootElement.style.marginLeft = `${left}px`;\n              this.rootElement.style.width = left > 0 ? `calc(100% - ${left}px)` : '100%';\n            }\n          };\n          window.addEventListener('layout-safe-area-change', this._safeAreaHandler);\n          this.sidePanel.open();\n        }\n\n        // Initialize Aardvark and expose globally to satisfy DocumentReader and shortcut routers\n        const AardvarkCls = globalThis.CommentsAardvark || globalThis.CadPlanAardvark;\n        if (AardvarkCls) {\n          this.aardvark = new AardvarkCls({ container: this.rootElement, dossierId: 'Comments' });\n          this.aardvark.init();\n        }\n\n        // Maintain bidirectional handles\n        window.commentsApp = this;\n        globalThis._cadPlanInstance = this;\n      } else {\n        await this.init(this.rootElement);\n        if (typeof TestHarness !== 'undefined') {\n          const harness = new TestHarness(this);\n          harness.init();\n          window.harness = harness;\n        }\n        window.commentsApp = this;\n        globalThis._cadPlanInstance = this;\n      }\n\n      return this;\n    }\n  _buildSidePanelNavigation(pages) {\n      if (!this.sidePanel) return;\n\n      this.sidePanel.header.innerHTML = '';\n      const headerTitle = makeElement('div', {\n        style: {\n          fontFamily: 'monospace',\n          fontSize: '11px',\n          fontWeight: 'bold',\n          color: '#00f2fe',\n          display: 'flex',\n          alignItems: 'center',\n          gap: '8px',\n          flex: 1\n        }\n      }, [\n        makeElement('span', {}, '💬'),\n        makeElement('span', {}, 'Comments & Community Engine')\n      ]);\n\n      const closeBtn = makeElement('button', {\n        className: 'dr-nav-btn',\n        style: { padding: '2px 8px', fontSize: '10px' },\n        onclick: () => this.sidePanel.close()\n      }, '✕');\n\n      this.sidePanel.header.append(headerTitle, closeBtn);\n\n      const container = this.sidePanel.contentContainer;\n      container.innerHTML = '';\n      container.style.cssText = 'flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;';\n\n      // 1. Community "
+    },
+    "Comments/js/CommentNode.js": {
+      "exists": true,
+      "bytes": 17923,
+      "lines": 504,
+      "methods": [
+        "constructor",
+        "render",
+        "showReplyBox",
+        "updateToggleIcon",
+        "updateStyle",
+        "toggleExpandCollapse",
+        "updateVisualState",
+        "getConnectionPoint",
+        "formatTimestamp",
+        "toggleRatingPanel",
+        "sortChildren",
+        "toggleChildSortOrder",
+        "handleDelete",
+        "renderTemporaryReplyBox",
+        "removeChild",
+        "setCollapsed",
+        "updateTextPreview",
+        "setProminence",
+        "showEditBox"
+      ],
+      "head": "class CommentNode {\n  constructor(data, view, parent = null) {\n    this.id = data.id;\n    this.userId = data.userId;\n    this.text = data.text;\n    this.timestamp = data.timestamp ? new Date(data.timestamp) : new Date();\n    this.isTemporary = data.isTemporary || false;\n    this.isDeleted = data.isDeleted || false;\n    this.isCollapsed = data.isCollapsed || false;\n    this.prominence = data.prominence !== undefined ? data.prominence : 80;\n\n    this.children = (data.children || []).map(childData => new CommentNode(childData, view, this));\n    this.view = view;\n    this.parent = parent;\n    this.isExpanded = data.isExpanded !== undefined ? data.isExpanded : true;\n    this.shortId = this.id.substring(this.id.length - 6).toUpperCase();\n    this.indentLeveL = -1;\n\n    this.domElement = null;\n    this.contentElement = null;\n    this.replyBoxContainer = null;\n    this.ratingPanel = null;\n    this.debugInfoElement = null;\n    this.textPreviewElement = null;\n    this.prominenceBadge = null;\n\n    this.currentX = 0;\n    this.currentY = 0;\n    this.currentOpacity = 0;\n    this.targetX = 0;\n    this.targetY = 0;\n    this.targetOpacity = 0;\n  }\n\n  render() {\n      if (this.domElement) return this.domElement;\n\n      if (this.isTemporary) {\n        return this.renderTemporaryReplyBox();\n      }\n\n      const tier = this.prominence >= 80 ? 'high' : (this.prominence <= 45 ? 'diminished' : 'normal');\n\n      this.domElement = makeElement('div', {\n        className: 'comment-node',\n        'data-node-id': this.id,\n        'data-prominence': tier\n      });\n\n      this.domElement.onclick = () => {\n        if (this.isCollapsed) {\n          this.setCollapsed(false);\n          this.view.refreshLayout();\n        }\n      };\n\n      this.domElement.classList.toggle('is-deleted', this.isDeleted);\n      this.domElement.classList.toggle('is-collapsed', this.isCollapsed);\n\n      const currentUser = this.view.options.app.currentUser;\n      if (currentUser && this.userId === currentUser.id) {\n        this.domElement.classList.add('is-own-comment');\n      }\n\n      this.toggleElement = makeElement('span', { className: 'node-toggle' });\n      if (this.children.length > 0) {\n        this.updateToggleIcon();\n        this.toggleElement.onclick = (e) => {\n          e.stopPropagation();\n          this.toggleExpandCollapse();\n        };\n      }\n\n      const user = this.view.options.app.userManager.getUserById(this.userId);\n      const commentBody = makeElement('div', { className: 'comment-content-wrapper' });\n\n      if (user && user.avatarUrl) {\n        const avatar = makeElement('img', {\n          className: 'comment-avatar',\n          src: user.avatarUrl,\n          alt: `${user.displayName}'s avatar`\n        });\n        commentBody.appendChild(avatar);\n      }\n\n      const header = makeElement('div', { className: 'comment-header' });\n      const headerContent = makeElement('div', { className: 'comment-header-content' });\n\n      if (user && !this.isDeleted) {\n        const nameSpan = makeElement('span', { className: 'user-name' });\n        nameSpan.innerHTML = NameRenderer.render(user.displayName);\n        headerContent.appendChild(nameSpan);\n\n        const tagVal = user.suffix || (typeof CommunityOracle !== 'undefined' ? CommunityOracle.getProfile(user.id)?.tag : 1001);\n        if (tagVal) {\n          nameSpan.appendChild(\n            makeElement('span', {\n              className: 'user-name-suffix',\n              style: { marginLeft: '4px', opacity: '0.6', fontSize: '10px', fontFamily: 'monospace' }\n            }, `#${tagVal}`)\n          );\n        }\n\n        const badges = user.badges || (typeof CommunityOracle !== 'undefined' ? CommunityOracle.getProfile(user.id)?.badges : []);\n        if (Array.isArray(badges) && badges.length > 0) {\n          badges.forEach(b => {\n            headerContent.appendChild(makeElement('span', {\n              style: {\n                background: 'rgba(56, 189, 248, 0.15)',\n                color: '#38bdf8',\n                fontSize: '9px',\n                padding: '1px 5px',\n                borderRadius: '4px',\n                fontFamily: 'monospace',\n                fontWeight: 'bold'\n              }\n            }, b));\n          });\n        }\n      } else if (!this.isDeleted) {\n        headerContent.textContent = 'Unknown User';\n      }\n\n      headerContent.appendChild(\n        makeElement('span', { className: 'comment-timestamp' }, this.formatTimestamp())\n      );\n\n      this.prominenceBadge = makeElement('span', {\n        className: 'comment-prominence-tag',\n        title: 'Reputation-Weighted Prominence'\n      }, `${this.prominence}% Prominence`);\n      headerContent.appendChild(this.prominenceBadge);\n\n      this.textPreviewElement = makeElement('span', { className: 'comment-text-preview' });\n      this.updateTextPreview();\n      headerContent.appendChild(this.textPreviewElement);\n\n      this.debugInfoElement = makeElement('span', { className: 'comment-debug-info' });\n      headerContent.appendChild(this.debugInfoElement);\n\n      const textContent = this.isDeleted ? '[message deleted]' : this.text;\n      const text = makeElement('div', { className: 'comment-text' }, textContent);\n      this.textBodyElement = text;\n      const actions = makeElement('div', { className: 'comment-actions' });\n\n      if (!this.isDeleted) {\n        const replyButton = makeElement('button', { onclick: (e) => { e.stopPropagation(); this.showReplyBox(); } }, 'Reply');\n        const rateButton = makeElement('button', {\n          o"
+    },
+    "Comments/js/CommentStyles.js": {
+      "exists": true,
+      "bytes": 50318,
+      "lines": 1492,
+      "methods": [
+        "getAppContainerStyles",
+        "getCommentThreadStyles",
+        "getPostBoxStyles",
+        "getUserSwitcherStyles",
+        "getRatingPanelStyles",
+        "getDialogStyles",
+        "getToolbarStyles",
+        "applyAllStyles",
+        "_hexToRgba",
+        "getCommentNodeStyles",
+        "getGlobalStyles",
+        "_mapSettingsToVariables",
+        "updateTheme",
+        "getDemoBannerStyles",
+        "ensureGoogleFontLoaded"
+      ],
+      "head": "\r\nclass CommentStyles {\n\n  getAppContainerStyles() {\n      return `\n        .comments-app-container {\n          max-width: 800px;\n          margin: 40px auto;\n          padding: 20px 30px;\n          background-color: var(--bg-secondary);\n          border: 1px solid var(--border-color);\n          border-radius: 8px;\n        }\n\n        .comments-app-container.comments-inline-mode {\n          max-width: 100%;\n          margin: 0;\n          padding: 10px 14px 14px;\n          background-color: rgba(9, 14, 25, 0.94);\n          border: 1px solid rgba(0, 242, 254, 0.25);\n          border-radius: 10px;\n          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);\n        }\n\n        .comments-inline-mode .comment-toolbar {\n          background-color: rgba(15, 23, 42, 0.85);\n          border-color: rgba(255, 255, 255, 0.08);\n          padding: 5px 10px;\n          font-size: 12px;\n        }\n\n        .comments-inline-mode .top-level-post-container {\n          margin-bottom: 10px;\n          margin-top: 8px;\n        }\n\n        .comments-inline-mode .post-comment-button {\n          padding: 7px 12px;\n          font-size: 13px;\n          background-color: rgba(15, 23, 42, 0.75);\n          border-color: rgba(0, 242, 254, 0.3);\n          color: #94a3b8;\n        }\n\n        .comments-inline-mode .comment-post-box {\n          background-color: #070a13;\n          border-color: rgba(0, 242, 254, 0.35);\n          padding: 10px 12px;\n        }\n\n        .comments-inline-mode .comment-input {\n          background-color: #0b111e;\n          color: #f8fafc;\n          border-color: #1e293b;\n          min-height: 62px;\n          font-size: 13.5px;\n        }\n\n        .comments-inline-mode .comment-content-wrapper {\n          background-color: rgba(15, 23, 42, 0.78);\n          border: 1px solid rgba(255, 255, 255, 0.06);\n        }\n\n        .comments-inline-mode .comment-node.is-own-comment > .comment-content-wrapper {\n          background-color: rgba(2, 132, 199, 0.14);\n          border-color: rgba(0, 242, 254, 0.25);\n        }\n\n        .app-title {\n          font-size: 24px;\n          color: var(--text-primary);\n          border-bottom: 1px solid var(--border-color);\n          padding-bottom: 15px;\n          margin-bottom: 15px;\n          font-weight: 500;\n        }\n      `;\n    }\n  getCommentThreadStyles() {\r\n    return `\r\n            .comment-thread {\r\n                position: relative;\r\n                user-select: none;\r\n            }\r\n\r\n            .comment-thread-svg-layer {\r\n                position: absolute;\r\n                top: 0;\r\n                left: 0;\r\n                pointer-events: none;\r\n                z-index: 0;\r\n                overflow: visible;\r\n            }\r\n        `;\r\n  }\r\n\r\n  getPostBoxStyles() {\r\n    return `\r\n        /* CHANGED: Selector from ID to class */\r\n        .top-level-post-container {\r\n            margin-bottom: 25px;\r\n        }\r\n\r\n        .post-comment-button {\r\n            width: 100%;\r\n            padding: 12px;\r\n            font-size: 15px;\r\n"
+    }
+  },
+  "allProjectNames": [
+    "AardvarkExtension",
+    "AardvarkPlaylist",
+    "AlphabetGame",
+    "Basic3D",
+    "BasicsWithDialogBox",
+    "BookmarkletWorkshop",
+    "BulbAndButton",
+    "Bunny",
+    "Bunny3d",
+    "CadPlan",
+    "Calculator",
+    "Comments",
+    "Community",
+    "DictationExperiment",
+    "DictationLab",
+    "DrawingApp",
+    "EconomicsOfAutomation",
+    "Es6Converter",
+    "FallingWater",
+    "FindTheDifferenceCheater",
+    "FourDFun",
+    "FunInFourD",
+    "GameTheoryStory",
+    "HomeSetup",
+    "House",
+    "House1",
+    "House2",
+    "House3",
+    "House4",
+    "Hypercube",
+    "JobsAndAI",
+    "LegoDetective",
+    "Library",
+    "Luno",
+    "LunoParser",
+    "MathStorm",
+    "Opus",
+    "Penrose",
+    "PleasureAndPain",
+    "Portal",
+    "QuoraToys",
+    "RunOnServerTools",
+    "SvgStudio",
+    "TaxChart",
+    "TouchController",
+    "TriBlob",
+    "Trippy",
+    "Truck",
+    "ValuationOfAccudraw",
+    "Voting",
+    "aardvarkBookmarklet",
+    "accuCad",
+    "accudraw",
+    "asdfasdf",
+    "guessTheNoteGame",
+    "junk",
+    "pianorolls",
+    "situation",
+    "squircle",
+    "teacup",
+    "temp",
+    "vibes"
+  ]
+}

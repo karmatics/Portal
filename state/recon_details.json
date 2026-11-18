@@ -1,0 +1,717 @@
+{
+  "commentsSubfolderAudit": {
+    "inMainFromCommentsSubdir": [],
+    "inMainFromEngineSubdir": [],
+    "inMainCadPlanOrNotes": [
+      "js/CommentsItemNotes.js",
+      "js/CommentsDocumentEditor.js",
+      "js/CommentsAardvark.js"
+    ]
+  },
+  "lunoLoaderTail": "('../')) {\n        var relSibling = clean.replace(/^\\.\\.\\//, '');\n        return isGh ? 'https://' + account + '.github.io/' + relSibling : '/' + relSibling;\n      }\n\n      if (clean.startsWith('Library/') || clean.startsWith('/Library/') || clean.startsWith('library/') || clean.startsWith('/library/')) {\n        var libPath = clean.replace(/^\\/?(?:Library|library)\\//, '');\n        return isGh ? 'https://' + account + '.github.io/Library/' + libPath : '/Library/' + libPath;\n      }\n\n      if (clean.startsWith('Comments/') || clean.startsWith('/Comments/')) {\n        var cmtPath = clean.replace(/^\\/?Comments\\//, '');\n        return isGh ? 'https://' + account + '.github.io/Comments/' + cmtPath : '/Comments/' + cmtPath;\n      }\n\n      clean = clean.replace(/^\\/+/, '');\n      var base = window.location.origin + window.location.pathname;\n      if (!base.endsWith('/')) {\n        base = base.substring(0, base.lastIndexOf('/') + 1);\n      }\n      return base + clean;\n    }\n  static loadScript(url) {\n    return new Promise((resolve, reject) => {\n      // Check if script already loaded\n      var existing = document.querySelector('script[src=\"' + url + '\"]');\n      if (existing) {\n        resolve();\n        return;\n      }\n\n      var script = document.createElement('script');\n      script.src = url;\n      script.async = false;\n      script.onload = () => resolve();\n      script.onerror = () => {\n        // Retry once without query params if failed\n        var cleanUrl = url.split('?')[0];\n        if (cleanUrl !== url) {\n          script.src = cleanUrl;\n        } else {\n          reject(new Error('Failed to load script: ' + url));\n        }\n      };\n      document.head.appendChild(script);\n    });\n  }\n\n  static loadStylesheet(url) {\n    if (!url) return;\n    // Prevent duplicate stylesheet tags\n    var existing = document.querySelector('link[href=\"' + url + '\"]');\n    if (existing) return;\n\n    var link = document.createElement('link');\n    link.rel = 'stylesheet';\n    link.type = 'text/css';\n    link.href = url;\n    document.head.appendChild(link);\n  }\n\n  static loadScriptsInOrder(urls, onProgress) {\n      return new Promise((resolve) => {\n        if (!urls || urls.length === 0) return resolve();\n        let remaining = urls.length;\n        let loaded = 0;\n        urls.forEach((url) => {\n          const cleanUrl = url.split('?')[0];\n          if (LunoLoader.loadedUrls.has(cleanUrl)) {\n            loaded++;\n            remaining--;\n            if (onProgress) onProgress(loaded, urls.length, url);\n            if (remaining === 0) resolve();\n            return;\n          }\n          LunoLoader.loadedUrls.add(cleanUrl);\n\n          const script = document.createElement('script');\n          script.src = url;\n          script.async = false; // Browser downloads in parallel, executes strictly in insertion order\n          script.onload = () => {\n            loaded++;\n            remaining--;\n            if (onProgress) onProgress(loaded, urls.length, url);\n            if (remaining === 0) resolve();\n          };\n          script.onerror = () => {\n            console.warn(`[LunoLoader] Error loading script: ${url}`);\n            loaded++;\n            remaining--;\n            if (onProgress) onProgress(loaded, urls.length, url);\n            if (remaining === 0) resolve();\n          };\n          document.head.appendChild(script);\n        });\n      });\n    }\n\n  static async lazyLoad(scriptPaths) {\n      if (!Array.isArray(scriptPaths)) scriptPaths = [scriptPaths];\n      const urls = scriptPaths.map(p => LunoLoader.resolveScriptUrl(p));\n      return LunoLoader.loadScriptsInOrder(urls);\n    }\n\n  static async ensureCommentsLoaded() {\n      if (\n        typeof globalThis.Comments !== 'undefined' &&\n        typeof globalThis.CommentThreadView !== 'undefined' &&\n        typeof globalThis.CommentNode !== 'undefined' &&\n        typeof globalThis.CommentStyles !== 'undefined' &&\n        typeof globalThis.MockServerAPI !== 'undefined' &&\n        typeof globalThis.ServerAPI !== 'undefined'\n      ) {\n        return true;\n      }\n\n      if (LunoLoader._commentsLoadPromise) {\n        return await LunoLoader._commentsLoadPromise;\n      }\n\n      LunoLoader._commentsLoadPromise = (async () => {\n        const urls = [];\n        if (typeof globalThis.CommunityOracle === 'undefined') {\n          urls.push(LunoLoader.resolveScriptUrl('Library/CommunityOracle.js'));\n        }\n        const coreFiles = [\n          'Comments/js/DialogBoxExtended.js',\n          'Comments/js/CommentStyles.js',\n          'Comments/js/NameRenderer.js',\n          'Comments/js/CommentNode.js',\n          'Comments/js/RatingPanel.js',\n          'Comments/js/CommentToolbar.js',\n          'Comments/js/CommentThreadView.js',\n          'Comments/js/UserManager.js',\n          'Comments/js/UserAccountDialog.js',\n          'Comments/js/MockServerAPI.js',\n          'Comments/js/ServerAPI.js',\n          'Comments/js/CloudDatabaseDialog.js',\n          'Comments/js/Comments.js'\n        ];\n        coreFiles.forEach(f => urls.push(LunoLoader.resolveScriptUrl(f)));\n        await LunoLoader.loadScriptsInOrder(urls);\n        return typeof globalThis.Comments !== 'undefined';\n      })();\n\n      return await LunoLoader._commentsLoadPromise;\n    }\n\n  static async ensurePartialEngineLoaded() {\n      if (typeof globalThis.PartialDocumentEngine !== 'undefined') return true;\n      const url = LunoLoader.resolveScriptUrl('Library/PartialDocumentEngine.js');\n      await LunoLoader.loadScriptsInOrder([url]);\n      return typeof globalThis.PartialDocumentEngine !== 'undefined';\n    }\n\n  static async loadProjectIntoSpa(projectName) {\n      if (!projectName) throw new Error('loadProjectIntoSpa requires a projectName');\n      const resolveProjUrl = (rel) => {\n        const clean = String(rel || '').replace(/^\\/+/, '');\n        if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;\n        if (clean.startsWith('Library/') || clean.startsWith('Comments/') || clean.startsWith('../')) {\n          return LunoLoader.resolveScriptUrl(clean);\n        }\n        return LunoLoader.resolveScriptUrl(`../${projectName}/${clean}`);\n      };\n\n      const metaUrl = resolveProjUrl('luno.json') + '?v=' + Date.now();\n      const res = await fetch(metaUrl);\n      if (!res.ok) throw new Error(`Could not load ${projectName}/luno.json (HTTP ${res.status})`);\n      const meta = await res.json();\n\n      // 1. Load shared library dependencies cleanly (once globally)\n      const libs = Array.isArray(meta.library) ? meta.library : [];\n      const libUrls = libs.map(l => LunoLoader.resolveScriptUrl('Library/' + l.replace(/^(?:Library|library)\\//, '')));\n      await LunoLoader.loadScriptsInOrder(libUrls);\n\n      if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n        DomBasics.run();\n      }\n\n      // 2. Scope sibling stylesheets cleanly via data-spa-project\n      document.querySelectorAll('link[data-spa-project]').forEach(el => {\n        if (el.getAttribute('data-spa-project') !== projectName) {\n          el.disabled = true;\n        } else {\n          el.disabled = false;\n        }\n      });\n\n      const styles = Array.isArray(meta.styles) ? meta.styles : [];\n      for (const s of styles) {\n        const href = resolveProjUrl(s);\n        let existing = document.querySelector(`link[data-spa-project=\"${projectName}\"][href=\"${href}\"]`);\n        if (!existing) {\n          existing = document.createElement('link');\n          existing.rel = 'stylesheet';\n          existing.type = 'text/css';\n          existing.href = href;\n          existing.setAttribute('data-spa-project', projectName);\n          document.head.appendChild(existing);\n        } else {\n          existing.disabled = false;\n        }\n      }\n\n      // 3. Isolated per-project class evaluation (prevents global `Identifier already declared` collisions)\n      LunoLoader._projectClassMaps = LunoLoader._projectClassMaps || {};\n      LunoLoader._projectLoaded = LunoLoader._projectLoaded || new Set();\n\n      if (!LunoLoader._projectLoaded.has(projectName)) {\n        const classMap = {};\n        const mainFiles = Array.isArray(meta.main) ? meta.main : [];\n\n        for (const rel of mainFiles) {\n          const scriptUrl = resolveProjUrl(rel);\n          const text = await LunoLoader.fetchText(scriptUrl);\n          const declared = LunoLoader.extractClassNames(text);\n          const exportTail = declared.map(c => `if (typeof ${c} !== 'undefined') { globalThis['${c}'] = ${c}; __spaMap['${c}'] = ${c}; }`).join('\\n');\n          const wrapped = `${text}\\n;\\n${exportTail}\\n//# sourceURL=${projectName}/${rel}`;\n          const fn = new Function('__spaMap', 'window', 'globalThis', wrapped);\n          fn(classMap, window, globalThis);\n        }\n\n        LunoLoader._projectClassMaps[projectName] = classMap;\n        LunoLoader._projectLoaded.add(projectName);\n      } else {\n        const savedMap = LunoLoader._projectClassMaps[projectName] || {};\n        Object.entries(savedMap).forEach(([k, v]) => {\n          globalThis[k] = v;\n          if (typeof window !== 'undefined') window[k] = v;\n        });\n      }\n\n      const entry = meta.entrypoint || {};\n      const clsName = entry.class || meta.mainClass || 'Main';\n      const methodName = entry.method || 'run';\n      const EntryClass = (LunoLoader._projectClassMaps[projectName] && LunoLoader._projectClassMaps[projectName][clsName]) || globalThis[clsName];\n\n      return { meta, EntryClass, clsName, methodName };\n    }\n\n  static unloadSpaStyles() {\n      document.querySelectorAll('link[data-spa-project]').forEach(el => {\n        el.disabled = true;\n      });\n    }\n}\n\nglobalThis.LunoLoader = LunoLoader;\nif (typeof module !== 'undefined' && module.exports) module.exports = LunoLoader;",
+  "mockApiTail": "g(36).slice(2, 7)}`,\n        userId: userId,\n        text: text,\n        timestamp: new Date().toISOString(),\n        prominence: 85,\n        children: []\n      };\n\n      if (parentId) {\n        const findParent = (nodes) => {\n          for (const node of nodes) {\n            if (node.id === parentId) return node;\n            const found = findParent(node.children || []);\n            if (found) return found;\n          }\n          return null;\n        };\n        const parent = findParent(this.db.threads[threadId]);\n        if (parent) {\n          parent.children.push(newComment);\n        } else {\n          return this._simulateNetworkDelay({\n            success: false,\n            error: 'Parent comment not found.'\n          });\n        }\n      } else {\n        this.db.threads[threadId].push(newComment);\n      }\n\n      const prevMeta = this.db.threadMeta[threadId] || {};\n      this.db.threadMeta[threadId] = {\n        ...prevMeta,\n        ...(meta || {}),\n        threadId,\n        status: 'active',\n        updatedAt: Date.now()\n      };\n\n      this._persistDb();\n      return this._simulateNetworkDelay({\n        success: true,\n        comment: JSON.parse(JSON.stringify(newComment))\n      });\n    }\n  async rebuildAndSeed() {\r\n    this.initialized = this._seedInitialData();\r\n    await this.initialized;\r\n    return this._simulateNetworkDelay({ success: true });\r\n  }\r\n\r\n  async getCurrentUser() {\r\n    await this.initialized;\r\n    // Simulate checking for a session cookie and returning the user if found.\r\n    return this._simulateNetworkDelay({\r\n      success: true,\r\n      user: this.currentUser,\r\n    });\r\n  }\r\n\r\n  async updateUserDisplayName(displayName) {\r\n    await this.initialized;\r\n    if (!this.currentUser) {\r\n      return this._simulateNetworkDelay({\r\n        success: false,\r\n        error: 'Not logged in.',\r\n      });\r\n    }\r\n\r\n    // This logic mirrors what the server should do\r\n    const newNormalized = displayName\r\n      .normalize('NFD')\r\n      .replace(/[\\u0300-\\u036f]/g, '')\r\n      .toLowerCase();\r\n\r\n    if (newNormalized !== this.currentUser.normalizedName) {\r\n      return this._simulateNetworkDelay({\r\n        success: false,\r\n        error: `Cannot change base name from \"${this.currentUser.normalizedName}\" to \"${newNormalized}\".`,\r\n      });\r\n    }\r\n\r\n    // Find the user in the \"database\" and update them\r\n    const userInDb = this.db.users.find((u) => u.id === this.currentUser.id);\r\n    if (userInDb) {\r\n      userInDb.displayName = displayName;\r\n    }\r\n\r\n    // Update the \"session\" user\r\n    this.currentUser.displayName = displayName;\r\n\r\n    return this._simulateNetworkDelay({\r\n      success: true,\r\n      user: JSON.parse(JSON.stringify(this.currentUser)),\r\n    });\r\n  }\r\n\r\n  async _parseSampleComments(text) {\r\n    const posts = [];\r\n    // Split by the separator and filter out empty strings that result from splits at the start/end of the file.\r\n    const blocks = text\r\n      .split(\r\n        '======================================================================'\r\n      )\r\n      .filter((b) => b.trim());\r\n\r\n    for (const block of blocks) {\r\n      const lines = block.trim().split('\\n');\r\n      const post = {};\r\n      const contentLines = [];\r\n      let inContent = false;\r\n\r\n      for (const line of lines) {\r\n        if (\r\n          line.startsWith(\r\n            '----------------------------------------------------------------------'\r\n          )\r\n        ) {\r\n          inContent = true;\r\n          continue;\r\n        }\r\n\r\n        if (inContent) {\r\n          contentLines.push(line);\r\n        } else {\r\n          const [key, ...valueParts] = line.split(':');\r\n          const value = valueParts.join(':').trim();\r\n          if (key === 'POST ID') post.id = value;\r\n          else if (key === 'USER') post.user = value;\r\n          else if (key === 'DATE')\r\n            post.timestamp = new Date(value).toISOString();\r\n          else if (key === 'REPLY TO')\r\n            post.parentId = value === 'none' ? null : value;\r\n        }\r\n      }\r\n      post.text = contentLines.join('\\n').trim();\r\n      posts.push(post);\r\n    }\r\n    return posts;\r\n  }\r\n\r\n  async adminSeedComment(data) {\r\n    console.warn(\r\n      '[MockServerAPI] adminSeedComment called on Mock API. This should only happen on Live.'\r\n    );\r\n    return this.postComment(data);\r\n  }\r\n\r\n  async registerUser(email, password, displayName) {\r\n    await this.initialized;\r\n    return this.getOrCreateUser(displayName); // Simulate registration with existing mock logic\r\n  }\r\n\r\n  async loginUser(email, password) {\r\n    await this.initialized;\r\n    if (this.db.users.length > 0) {\r\n      this.currentUser = this.db.users[0]; // Simulate login as first available mock user\r\n      return this._simulateNetworkDelay({\r\n        success: true,\r\n        user: this.currentUser,\r\n      });\r\n    }\r\n    return this._simulateNetworkDelay({\r\n      success: false,\r\n      error: 'No users found in mock database.',\r\n    });\r\n  }\r\n\r\n  async submitRating(payload) {\r\n    return this._simulateNetworkDelay({ success: true }); // Fake success for mock mode\r\n  }\r\n\r\n  async setPassword(email, password) {\r\n    await this.initialized;\r\n    if (!this.currentUser) {\r\n      return this._simulateNetworkDelay({\r\n        success: false,\r\n        error: 'Not logged in.',\r\n      });\r\n    }\r\n    // In mock mode, just store email on the current user\r\n    this.currentUser.email = email;\r\n    return this._simulateNetworkDelay({\r\n      success: true,\r\n      user: JSON.parse(JSON.stringify(this.currentUser)),\r\n    });\r\n  }\n\n  static getSharedInstance() {\n      if (!globalThis._sharedMockServerAPI) {\n        globalThis._sharedMockServerAPI = new MockServerAPI();\n      }\n      return globalThis._sharedMockServerAPI;\n    }\n\n  static subscribe(fn) {\n      if (!MockServerAPI._subscribers) MockServerAPI._subscribers = new Set();\n      MockServerAPI._subscribers.add(fn);\n      return () => MockServerAPI._subscribers.delete(fn);\n    }\n\n  static _notifySubscribers(detail = {}) {\n      if (!MockServerAPI._subscribers) return;\n      MockServerAPI._subscribers.forEach(fn => {\n        try { fn(detail); } catch (e) {}\n      });\n    }\n\n  _persistDb() {\n      if (typeof localStorage === 'undefined') return;\n      try {\n        const payload = {\n          users: this.db.users || [],\n          threads: this.db.threads || {},\n          threadMeta: this.db.threadMeta || {},\n          currentUserId: this.currentUser?.id || null\n        };\n        localStorage.setItem('comments_local_db_v1', JSON.stringify(payload));\n      } catch (e) {}\n      MockServerAPI._notifySubscribers({ source: 'mock-db' });\n    }\n\n  async editComment(commentId, userId, newText, threadId = 'main') {\n      await this.initialized;\n      const list = this.db.threads[threadId] || [];\n      const findNode = (nodes) => {\n        for (const n of nodes) {\n          if (n.id === commentId) return n;\n          const f = findNode(n.children || []);\n          if (f) return f;\n        }\n        return null;\n      };\n      const target = findNode(list);\n      if (!target) return { success: false, error: 'Comment not found.' };\n      if (userId && target.userId !== userId) return { success: false, error: 'You can only edit your own comments.' };\n      target.text = newText;\n      target.editedAt = new Date().toISOString();\n      if (this.db.threadMeta[threadId]) {\n        this.db.threadMeta[threadId].updatedAt = Date.now();\n      }\n      this._persistDb();\n      return { success: true, comment: JSON.parse(JSON.stringify(target)) };\n    }\n\n  async deleteComment(commentId, userId, threadId = 'main') {\n      await this.initialized;\n      const list = this.db.threads[threadId] || [];\n      const removeFrom = (nodes) => {\n        for (let i = 0; i < nodes.length; i++) {\n          const n = nodes[i];\n          if (n.id === commentId) {\n            if (userId && n.userId !== userId) return { ok: false, error: 'You can only delete your own comments.' };\n            if (n.children && n.children.length > 0) {\n              n.isDeleted = true;\n              n.text = '[message deleted]';\n            } else {\n              nodes.splice(i, 1);\n            }\n            return { ok: true };\n          }\n          if (n.children && n.children.length > 0) {\n            const res = removeFrom(n.children);\n            if (res) return res;\n          }\n        }\n        return null;\n      };\n      const res = removeFrom(list);\n      if (!res) return { success: false, error: 'Comment not found.' };\n      if (!res.ok) return { success: false, error: res.error };\n\n      if (list.length === 0 && this.db.threadMeta[threadId]) {\n        delete this.db.threadMeta[threadId];\n      }\n      this._persistDb();\n      return { success: true };\n    }\n\n  async setThreadStatus(threadId, status = 'resolved') {\n      await this.initialized;\n      this.db.threadMeta[threadId] = this.db.threadMeta[threadId] || { threadId };\n      this.db.threadMeta[threadId].status = status;\n      this.db.threadMeta[threadId].updatedAt = Date.now();\n      this._persistDb();\n      return { success: true, status };\n    }\n\n  async registerThreadMeta(threadId, meta = {}) {\n      await this.initialized;\n      if (!threadId) return;\n      this.db.threadMeta[threadId] = {\n        ...(this.db.threadMeta[threadId] || {}),\n        ...meta,\n        threadId\n      };\n    }\n\n  async getAllThreadsSummary(filterDossier = null) {\n      await this.initialized;\n      const countTree = (nodes) => {\n        let c = 0;\n        (nodes || []).forEach(n => {\n          if (!n.isDeleted) c++;\n          c += countTree(n.children || []);\n        });\n        return c;\n      };\n      const flattenTree = (nodes, depth = 0, out = []) => {\n        (nodes || []).forEach(n => {\n          if (!n.isDeleted) {\n            const u = this.db.users.find(x => x.id === n.userId);\n            out.push({\n              id: n.id,\n              userId: n.userId,\n              authorName: u?.displayName || 'Rob Brown',\n              text: n.text,\n              timestamp: n.timestamp,\n              depth\n            });\n          }\n          flattenTree(n.children || [], depth + 1, out);\n        });\n        return out;\n      };\n\n      const summaries = [];\n      for (const [tId, nodes] of Object.entries(this.db.threads || {})) {\n        const count = countTree(nodes);\n        if (count === 0) continue;\n        const meta = this.db.threadMeta[tId] || {};\n        if (!meta.dossierId && !tId.startsWith('doc_')) continue;\n        if (filterDossier && meta.dossierId && meta.dossierId !== filterDossier) continue;\n\n        const flat = flattenTree(nodes);\n        summaries.push({\n          threadId: tId,\n          dossierId: meta.dossierId || 'Comments',\n          pageId: meta.pageId || 'overview',\n          blockId: meta.blockId || tId,\n          enclosingBlockId: meta.enclosingBlockId || null,\n          blockPreview: meta.blockPreview || '',\n          xpath: meta.xpath || null,\n          tagName: meta.tagName || null,\n          status: meta.status || 'active',\n          updatedAt: meta.updatedAt || Date.now(),\n          commentCount: count,\n          comments: flat\n        });\n      }\n\n      return summaries.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));\n    }\n}\r\n\r\n\n\n// Clean globalThis export for Luno environment\nglobalThis.MockServerAPI = MockServerAPI;\nif (typeof module !== 'undefined' && module.exports) module.exports = MockServerAPI;\n",
+  "serverApiFull": "class ServerAPI {\n  /**\n   * Modern Serverless Network Transport for Comments.\n   * Connects to PostgreSQL / Supabase REST endpoints or serverless workers.\n   * Completely retired legacy DreamHost PHP endpoints.\n   */\n  constructor(baseUrl = '') {\n    this.baseUrl = baseUrl || this._resolveDefaultEndpoint();\n    this.useMockFallback = true;\n  }\n\n  _resolveDefaultEndpoint() {\n    if (typeof localStorage !== 'undefined') {\n      const stored = localStorage.getItem('comments_supabase_url');\n      if (stored) return stored;\n    }\n    return '';\n  }\n\n  setBaseUrl(url, apiKey = null) {\n      if (url && typeof url === 'string') {\n        this.baseUrl = url.trim().replace(/\\/+$/, '');\n        if (typeof localStorage !== 'undefined') {\n          localStorage.setItem('comments_supabase_url', this.baseUrl);\n        }\n      }\n      if (apiKey && typeof apiKey === 'string') {\n        if (typeof localStorage !== 'undefined') {\n          localStorage.setItem('comments_supabase_key', apiKey.trim());\n        }\n      }\n    }\n\n  async getThreadData(threadId = 'main') {\n      const supabaseUrl = this.baseUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_url') : '');\n      const supabaseKey = typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_key') : '';\n\n      if (!supabaseUrl || !supabaseKey) {\n        return await MockServerAPI.getSharedInstance().getThreadData(threadId);\n      }\n\n      try {\n        const endpoint = `${supabaseUrl}/rest/v1/comments?page_id=eq.${encodeURIComponent(threadId)}&select=*,profiles(*)&order=created_at.asc`;\n        const res = await fetch(endpoint, {\n          method: 'GET',\n          headers: {\n            'apikey': supabaseKey,\n            'Authorization': `Bearer ${supabaseKey}`,\n            'Content-Type': 'application/json'\n          }\n        });\n\n        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);\n        const rawRows = await res.json();\n\n        const usersMap = new Map();\n        const nodesMap = new Map();\n        const roots = [];\n\n        rawRows.forEach(row => {\n          const author = row.profiles || { display_name: 'Anonymous', tag: 1001, id: row.author_id };\n          if (!usersMap.has(author.id)) {\n            usersMap.set(author.id, {\n              id: author.id,\n              displayName: author.display_name,\n              suffix: author.tag,\n              reputation: 0.5\n            });\n          }\n\n          const node = {\n            id: row.id,\n            userId: row.author_id,\n            text: row.body,\n            timestamp: row.created_at,\n            prominence: row.score !== undefined ? row.score : 80,\n            children: [],\n            parentId: row.parent_id\n          };\n          nodesMap.set(node.id, node);\n        });\n\n        nodesMap.forEach(node => {\n          if (node.parentId && nodesMap.has(node.parentId)) {\n            nodesMap.get(node.parentId).children.push(node);\n          } else {\n            roots.push(node);\n          }\n        });\n\n        return {\n          success: true,\n          users: Array.from(usersMap.values()),\n          comments: roots\n        };\n      } catch (err) {\n        console.warn('[ServerAPI] Supabase cloud fetch notice, falling back to local store:', err.message);\n        return await MockServerAPI.getSharedInstance().getThreadData(threadId);\n      }\n    }\n  async getOrCreateUser(displayName) {\n    if (typeof CommunityOracle !== 'undefined') {\n      const prof = CommunityOracle.addOrUpdateProfile({ name: displayName });\n      return {\n        success: true,\n        user: {\n          id: prof.id,\n          displayName: prof.name,\n          normalizedName: prof.name.toLowerCase().replace(/[^a-z0-9]/g, ''),\n          suffix: prof.tag,\n          reputation: prof.reputation,\n          badges: prof.badges || []\n        }\n      };\n    }\n    return {\n      success: true,\n      user: {\n        id: `u_${displayName.toLowerCase()}`,\n        displayName,\n        suffix: 1001,\n        reputation: 0.5\n      }\n    };\n  }\n\n  async postComment({ parentId, userId, text, threadId = 'main', meta = null }) {\n      const supabaseUrl = this.baseUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_url') : '');\n      const supabaseKey = typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_key') : '';\n\n      if (!supabaseUrl || !supabaseKey) {\n        return await MockServerAPI.getSharedInstance().postComment({ parentId, userId, text, threadId, meta });\n      }\n\n      try {\n        const endpoint = `${supabaseUrl}/rest/v1/comments`;\n        const res = await fetch(endpoint, {\n          method: 'POST',\n          headers: {\n            'apikey': supabaseKey,\n            'Authorization': `Bearer ${supabaseKey}`,\n            'Content-Type': 'application/json',\n            'Prefer': 'return=representation'\n          },\n          body: JSON.stringify({\n            page_id: threadId,\n            parent_id: parentId || null,\n            author_id: userId,\n            body: text,\n            score: 80\n          })\n        });\n\n        if (!res.ok) throw new Error(`HTTP ${res.status}`);\n        const inserted = await res.json();\n        const row = inserted[0];\n\n        return {\n          success: true,\n          comment: {\n            id: row.id,\n            userId: row.author_id,\n            text: row.body,\n            timestamp: row.created_at,\n            prominence: row.score,\n            children: []\n          }\n        };\n      } catch (err) {\n        console.warn('[ServerAPI] Supabase post failed, using local fallback:', err.message);\n        return await MockServerAPI.getSharedInstance().postComment({ parentId, userId, text, threadId, meta });\n      }\n    }\n  async getCurrentUser() {\n    if (typeof CommunityOracle !== 'undefined') {\n      const profiles = CommunityOracle.getAllProfiles();\n      const first = profiles[0];\n      if (first) {\n        return {\n          success: true,\n          user: {\n            id: first.id,\n            displayName: first.name,\n            suffix: first.tag,\n            reputation: first.reputation,\n            badges: first.badges || []\n          }\n        };\n      }\n    }\n    return { success: false, user: null };\n  }\n\n  async updateUserDisplayName(displayName) {\n    if (typeof CommunityOracle !== 'undefined') {\n      const updated = CommunityOracle.addOrUpdateProfile({ name: displayName });\n      return { success: true, user: updated };\n    }\n    return { success: true, user: { displayName } };\n  }\n\n  async clearAllData(threadId = null) {\n    if (typeof MockServerAPI !== 'undefined') {\n      const mock = new MockServerAPI();\n      return await mock.rebuildAndSeed();\n    }\n    return { success: true };\n  }\n\n  async deleteComment(commentId, userId, threadId = 'main') {\n      const supabaseUrl = this.baseUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_url') : '');\n      const supabaseKey = typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_key') : '';\n      if (!supabaseUrl || !supabaseKey) {\n        return await MockServerAPI.getSharedInstance().deleteComment(commentId, userId, threadId);\n      }\n      try {\n        const res = await fetch(`${supabaseUrl}/rest/v1/comments?id=eq.${encodeURIComponent(commentId)}`, {\n          method: 'DELETE',\n          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }\n        });\n        if (!res.ok) throw new Error(`HTTP ${res.status}`);\n        return { success: true };\n      } catch (err) {\n        return await MockServerAPI.getSharedInstance().deleteComment(commentId, userId, threadId);\n      }\n    }\n  async submitRating(payload) {\n    return { success: true };\n  }\n\n  async setPassword(email, password) {\n    return { success: true };\n  }\n\n  async editComment(commentId, userId, newText, threadId = 'main') {\n      const supabaseUrl = this.baseUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_url') : '');\n      const supabaseKey = typeof localStorage !== 'undefined' ? localStorage.getItem('comments_supabase_key') : '';\n      if (!supabaseUrl || !supabaseKey) {\n        return await MockServerAPI.getSharedInstance().editComment(commentId, userId, newText, threadId);\n      }\n      try {\n        const res = await fetch(`${supabaseUrl}/rest/v1/comments?id=eq.${encodeURIComponent(commentId)}`, {\n          method: 'PATCH',\n          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },\n          body: JSON.stringify({ body: newText })\n        });\n        if (!res.ok) throw new Error(`HTTP ${res.status}`);\n        return { success: true };\n      } catch (err) {\n        return await MockServerAPI.getSharedInstance().editComment(commentId, userId, newText, threadId);\n      }\n    }\n}\n\nglobalThis.ServerAPI = ServerAPI;\nif (typeof module !== 'undefined' && module.exports) module.exports =",
+  "commentsEntryHead": "class Comments {\n  constructor() {\n    this.container = null;\n    this.commentView = null;\n    this.userManager = new UserManager();\n    this.styles = new CommentStyles();\n\n    this.serverAPI = new MockServerAPI();\n    this.apiMode = 'mock';\n\n    this.currentUser = null;\n    this.appContainer = null;\n    this.isDebugMode = false;\n    this.globalSortOrder = 'newest';\n    this.topLevelPostBoxContainer = null;\n    this.userAccountDialog = new UserAccountDialog(this);\n    this.activeReplyController = null;\n    this.threadId = 'main';\n    this.toolbar = new CommentToolbar(this);\n  }\n\n  static async run(env) {\n    const instance = new Comments();\n    return await instance.run(env);\n  }\n\n  async run(env) {\n      if (!env || !env.container) {\n        throw new Error('[Comments] run() requires an environment with a valid container.');\n      }\n\n      if (this.rootElement) {\n        this.destroy();\n      }\n\n      this.env = env;\n      this.rootElement = env.container;\n      this.rootElement.innerHTML = '';\n      this.rootElement.style.overflowY = 'auto';\n      this.rootElement.style.minHeight = '100vh';\n      this.rootElement.style.boxSizing = 'border-box';\n      this.rootElement.style.transition = 'margin-left 0.25s cubic-bezier(0.2, 0.0, 0.2, 1), width 0.25s cubic-bezier(0.2, 0.0, 0.2, 1)';\n\n      // Sync Community profiles\n      if (typeof CommunityOracle !== 'undefined' && typeof CommunityOracle.loadProfiles === 'function') {\n        CommunityOracle.loadProfiles();\n      }\n\n      const pages = [\n        { id: 'overview', title: '0. Architecture & Modern Horizon', docClass: () => globalThis.CommentsOverviewContent },\n        { id: 'styling', title: '1. Styling, Theming & Micro-Threads', docClass: () => globalThis.CommentsStylingContent },\n        { id: 'identity', title: '2. Identity: Anonymous-First & Discriminators', docClass: () => globalThis.CommentsAuthIdentityContent },\n        { id: 'threading', title: '3. Trees, Prominence & Weighted Reputation', docClass: () => globalThis.CommentsThreadingContent },\n        { id: 'api_contract', title: '4. Supabase & Serverless API Contract', docClass: () => globalThis.CommentsApiContractContent },\n        { id: 'dom_anchoring', title: '5. Universal DOM Anchoring & Aardvark', docClass: () => globalThis.CommentsDomAnchorContent },\n        { id: 'ai_moderation', title: '6. AI Moderation & Prominence Spectrum', docClass: () => globalThis.CommentsAiModerationContent },\n        { id: 'federation', title: '7. Federation, Shared Reputation & Scale', docClass: () => globalThis.CommentsFederationContent },\n        { id: 'deployment_kit', title: '8. Drop-In Deployment Kit & Prompt Generator', docClass: () => globalThis.CommentsDeploymentKitContent }\n      ];\n\n      if (typeof DocumentReader !== 'undefined') {\n        this.reader = new DocumentReader({\n          container: this.rootElement,\n          brandTitle: 'Comments System & Community Oracle',\n          brandIcon: '💬',\n          dossierId: 'Comments',\n          pages: pages\n        });\n        await this.reader.init();\n\n        if (typeof SidePanel !== 'undefined') {\n          this.sidePanel = new SidePanel('left', 340, null);\n          this._buildSidePanelNavigation(pages);\n\n          this._safeAreaHandler = (e) => {\n            const left = e.detail?.left || 0;\n            if (this.rootElement) {\n              this.rootElement.style.marginLeft = `${left}px`;\n              this.rootElement.style.width = left > 0 ? `calc(100% - ${left}px)` : '100%';\n            }\n          };\n          window.addEventListener('layout-safe-area-change', this._safeAreaHandler);\n          this.sidePanel.open();\n        }\n\n        // Initialize Aardvark and expose globally to satisfy DocumentReader and shortcut routers\n        const AardvarkCls = globalThis.CommentsAardvark || globalThis.CadPlanAardvark;\n        if (AardvarkCls) {\n          this.aardvark = new AardvarkCls({ container: this.rootElement, dossierId: 'Comments' });\n          this.aardvark.init();\n        }\n\n        // Maintain bidirectional handles\n        window.commentsApp = this;\n        globalThis._cadPlanInstance = this;\n      } else {\n        await this.init(this.rootElement);\n        if (typeof TestHarness !== 'undefined') {\n          const harness = new TestHarness(this);\n          harness.init();\n          window.harness = harness;\n        }\n        window.commentsApp = this;\n        globalThis._cadPlanInstance = this;\n      }\n\n      return this;\n    }\n  _buildSidePanelNavigation(pages) {\n      if (!this.sidePanel) return;\n\n      this.sidePanel.header.innerHTML = '';\n      const headerTitle = makeElement('div', {\n        style: {\n          fontFamily: 'monospace',\n          fontSize: '11px',\n          fontWeight: 'bold',\n          color: '#00f2fe',\n          display: 'flex',\n          alignItems: 'center',\n          gap: '8px',\n          flex: 1\n        }\n      }, [\n        makeElement('span', {}, '💬'),\n        makeElement('span', {}, 'Comments & Community Engine')\n      ]);\n\n      const closeBtn = makeElement('button', {\n        className: 'dr-nav-btn',\n        style: { padding: '2px 8px', fontSize: '10px' },\n        onclick: () => this.sidePanel.close()\n      }, '✕');\n\n      this.sidePanel.header.append(headerTitle, closeBtn);\n\n      const container = this.sidePanel.contentContainer;\n      container.innerHTML = '';\n      container.style.cssText = 'flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;';\n\n      // 1. Community User Identity Status Pill & Switcher\n      const currentProf = this.currentUser || (typeof CommunityOracle !== 'undefined' ? CommunityOracle.getProfile('u_rob') : null);\n\n      const communityBox = makeElement('div', {\n        style: {\n          background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%)',\n          border: '1.5px solid rgba(0, 242, 254, 0.35)',\n          borderRadius: '10px',\n          padding: '10px 12px',\n          display: 'flex',\n          fl",
+  "commentNodeTail": "  try {\n      const result = await app.serverAPI.deleteComment(this.id, currentUser.id, threadId);\n      if (result.success) {\n        if (this.children.length > 0) {\n          this.isDeleted = true;\n          this.text = '[message deleted]';\n          const oldElement = this.domElement;\n          this.domElement = null;\n          const newElement = this.render();\n          if (oldElement && oldElement.parentNode) {\n            oldElement.parentNode.replaceChild(newElement, oldElement);\n          }\n          this.view.refreshLayout();\n        } else {\n          if (this.parent) this.parent.removeChild(this.id);\n          else this.view.removeRootNode(this.id);\n          this.view.refreshLayout();\n        }\n      } else {\n        alert(`Delete failed: ${result.error}`);\n      }\n    } catch (e) {\n      console.error('Delete error:', e);\n    }\n  }\n\n  renderTemporaryReplyBox() {\n    this.domElement = makeElement('div', {\n      className: 'comment-node is-temporary-reply',\n      'data-node-id': this.id\n    });\n    this.toggleElement = makeElement('span', { className: 'node-toggle' });\n\n    const app = this.view.options.app;\n    const onCancel = () => {\n      app.setActiveReplyController(null);\n      this.parent.removeChild(this.id);\n      this.view.refreshLayout();\n    };\n    const onPost = () => {\n      app.setActiveReplyController(null);\n      this.parent.removeChild(this.id);\n    };\n\n    const postBox = app.createPostBox(this.parent.id, onPost, onCancel);\n    postBox.classList.add('reply-box');\n\n    const contentWrapper = makeElement('div', { className: 'comment-content-wrapper' });\n    contentWrapper.appendChild(postBox);\n    this.domElement.append(this.toggleElement, contentWrapper);\n\n    setTimeout(() => {\n      const focusEl = postBox.querySelector('.username-input') || postBox.querySelector('.comment-input');\n      if (focusEl) focusEl.focus();\n    }, 50);\n\n    return this.domElement;\n  }\n\n  removeChild(childId) {\n    const childIndex = this.children.findIndex((c) => c.id === childId);\n    if (childIndex > -1) {\n      const [removedNode] = this.children.splice(childIndex, 1);\n      this.view._unregisterNode(removedNode);\n    }\n    this.updateVisualState();\n    this.updateToggleIcon();\n  }\n\n  setCollapsed(isCollapsed) {\n    if (this.isCollapsed === isCollapsed || !this.domElement) return;\n    this.isCollapsed = isCollapsed;\n    this.domElement.classList.toggle('is-collapsed', this.isCollapsed);\n  }\n\n  updateTextPreview() {\n    if (!this.textPreviewElement) return;\n    if (this.isDeleted) {\n      this.textPreviewElement.textContent = '';\n      return;\n    }\n    const previewText = this.text.replace(/\\n/g, ' ').trim();\n    this.textPreviewElement.textContent = ` - ${previewText}`;\n  }\n\n  setProminence(val) {\n    this.prominence = Math.max(0, Math.min(100, Math.round(val)));\n    if (this.domElement) {\n      const tier = this.prominence >= 80 ? 'high' : (this.prominence <= 45 ? 'diminished' : 'normal');\n      this.domElement.setAttribute('data-prominence', tier);\n      if (this.prominenceBadge) {\n        this.prominenceBadge.textContent = `${this.prominence}% Prominence`;\n      }\n      if (this.view) this.view.refreshLayout();\n    }\n  }\n\n  showEditBox() {\n      if (!this.textBodyElement || this._editingBox) return;\n      const app = this.view.options.app;\n      const ta = makeElement('textarea', {\n        className: 'comment-input',\n        style: { width: '100%', minHeight: '64px', marginTop: '6px', boxSizing: 'border-box' }\n      });\n      ta.value = this.text;\n\n      const saveBtn = makeElement('button', {\n        type: 'button',\n        className: 'post-button',\n        style: { padding: '5px 12px', fontSize: '12px' },\n        onclick: async (e) => {\n          e.stopPropagation();\n          const nextText = ta.value.trim();\n          if (!nextText) return;\n          const res = await app.serverAPI.editComment(this.id, app.currentUser?.id, nextText, app.threadId);\n          if (res && res.success) {\n            this.text = nextText;\n            this.updateTextPreview();\n            this.textBodyElement.textContent = nextText;\n            this.textBodyElement.style.display = '';\n            this._editingBox.remove();\n            this._editingBox = null;\n            this.view.refreshLayout();\n          } else {\n            alert(res?.error || 'Could not update comment.');\n          }\n        }\n      }, 'Save');\n\n      const cancelBtn = makeElement('button', {\n        type: 'button',\n        className: 'cancel-button',\n        style: { padding: '5px 10px', fontSize: '12px' },\n        onclick: (e) => {\n          e.stopPropagation();\n          this.textBodyElement.style.display = '';\n          this._editingBox.remove();\n          this._editingBox = null;\n          this.view.refreshLayout();\n        }\n      }, 'Cancel');\n\n      this._editingBox = makeElement('div', {\n        style: { display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }\n      }, [\n        ta,\n        makeElement('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '6px' } }, [cancelBtn, saveBtn])\n      ]);\n\n      this.textBodyElement.style.display = 'none';\n      this.textBodyElement.parentElement.appendChild(this._editingBox);\n      this.view.refreshLayout();\n      setTimeout(() => ta.focus(), 20);\n    }\n}\n\nglobalThis.CommentNode = CommentNode;\nif (typeof module !== 'undefined' && module.exports) module.exports = CommentNode;",
+  "commentStylesTail": "}\r\n\r\n        .demo-mode-banner.theme-sticky-note:hover {\r\n            transform: rotate(-0.4deg) translateY(-1px);\r\n        }\r\n\r\n        .demo-mode-banner.theme-sticky-note .demo-mode-banner-kicker {\r\n            font-family: \"Architects Daughter\", \"Segoe Print\", \"Comic Sans MS\", cursive;\r\n            font-size: 12px;\r\n            letter-spacing: 0.08em;\r\n            text-transform: none;\r\n            opacity: 0.9;\r\n        }\r\n\r\n        .demo-mode-banner.theme-sticky-note .demo-mode-banner-text {\r\n            font-family: \"Architects Daughter\", \"Segoe Print\", \"Comic Sans MS\", cursive;\r\n            font-size: 15px;\r\n            line-height: 1.28;\r\n            letter-spacing: 0;\r\n            text-transform: none;\r\n        }\r\n\r\n        .demo-mode-banner.theme-sticky-note .demo-mode-inline-link {\r\n            color: #7b2f00;\r\n            text-decoration-color: #7b2f00;\r\n        }\r\n\r\n        .demo-mode-banner.theme-sticky-note .demo-mode-toggle-track {\r\n            border-color: rgba(74, 59, 8, 0.22);\r\n            background: rgba(255,255,255,0.42);\r\n            box-shadow: none;\r\n        }\r\n\r\n        .demo-mode-banner.theme-sticky-note .demo-mode-toggle-label {\r\n            font-family: \"Architects Daughter\", \"Segoe Print\", \"Comic Sans MS\", cursive;\r\n            font-size: 13px;\r\n            letter-spacing: 0;\r\n            text-transform: none;\r\n            color: #4a3b08;\r\n            padding: 9px 13px;\r\n        }\r\n\r\n        .demo-mode-banner.theme-sticky-note .demo-mode-toggle-fill {\r\n            background: rgba(255,255,255,0.75);\r\n            box-shadow: none;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint {\r\n            border: 1px solid rgba(163, 214, 255, 0.26);\r\n            background:\r\n                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),\r\n                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),\r\n                linear-gradient(180deg, rgba(15, 45, 84, 0.95), rgba(8, 28, 54, 0.95));\r\n            background-size: 20px 20px, 20px 20px, auto;\r\n            color: #dbeeff;\r\n            box-shadow: 0 10px 24px rgba(0,0,0,0.18);\r\n            font-family: \"Patrick Hand SC\", \"Segoe UI\", sans-serif;\r\n            padding: 10px 12px;\r\n            border-radius: 10px;\r\n            gap: 12px;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-banner-content {\r\n            gap: 1px;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-banner-kicker {\r\n            color: #d7f0ff;\r\n            font-family: \"Patrick Hand SC\", \"Segoe UI\", sans-serif;\r\n            font-size: 10px;\r\n            letter-spacing: 0.16em;\r\n            text-transform: uppercase;\r\n            opacity: 0.95;\r\n            transform: rotate(-0.8deg);\r\n            transform-origin: left center;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-banner-text {\r\n            font-family: \"Patrick Hand SC\", \"Segoe UI\", sans-serif;\r\n            font-size: 14px;\r\n            line-height: 1.18;\r\n            letter-spacing: 0.015em;\r\n            text-transform: uppercase;\r\n            transform: rotate(-0.35deg);\r\n            transform-origin: left center;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-inline-link {\r\n            color: #fff799;\r\n            text-decoration-color: #fff799;\r\n            text-decoration-thickness: 2px;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-banner-side {\r\n            align-self: center;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-toggle-track {\r\n            min-width: 128px;\r\n            padding: 4px;\r\n            border-radius: 15px;\r\n            border-color: rgba(163, 214, 255, 0.26);\r\n            background: rgba(7, 25, 48, 0.48);\r\n            box-shadow:\r\n                inset 0 1px 0 rgba(255,255,255,0.04),\r\n                0 3px 10px rgba(0,0,0,0.14);\r\n            backdrop-filter: none;\r\n            -webkit-backdrop-filter: none;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-toggle-label {\r\n            font-family: \"Patrick Hand SC\", \"Segoe UI\", sans-serif;\r\n            font-size: 12px;\r\n            letter-spacing: 0.03em;\r\n            text-transform: uppercase;\r\n            color: #eefaff;\r\n            transform: rotate(-0.25deg);\r\n            padding: 7px 10px;\r\n        }\r\n\r\n        .demo-mode-banner.theme-blueprint .demo-mode-toggle-fill {\r\n            top: 4px;\r\n            left: 4px;\r\n            width: calc(50% - 4px);\r\n            height: calc(100% - 8px);\r\n            border-radius: 12px;\r\n            background: linear-gradient(180deg, rgba(76,116,192,0.96), rgba(50,88,162,0.96));\r\n            box-shadow:\r\n                0 3px 8px rgba(16,32,67,0.26),\r\n                inset 0 1px 0 rgba(255,255,255,0.14);\r\n        }\r\n\r\n        @media (max-width: 780px) {\r\n            .demo-mode-banner {\r\n                flex-direction: column;\r\n                align-items: stretch;\r\n            }\r\n\r\n            .demo-mode-banner-side {\r\n                justify-content: flex-start;\r\n            }\r\n\r\n            .demo-mode-popup-image-row {\r\n                grid-template-columns: 1fr;\r\n            }\r\n        }\r\n    `;\r\n  }\r\n\r\n  ensureGoogleFontLoaded(fontFamily, href) {\r\n    if (!fontFamily || !href) return;\r\n\r\n    const existing = document.querySelector(\r\n      `link[data-comments-google-font=\"${fontFamily}\"]`\r\n    );\r\n    if (existing) return;\r\n\r\n    const link = document.createElement('link');\r\n    link.rel = 'stylesheet';\r\n    link.href = href;\r\n    link.setAttribute('data-comments-google-font', fontFamily);\r\n    document.head.appendChild(link);\r\n  }\r\n\r\n}\r\n\r\n\n\n// Clean globalThis export for Luno environment\nglobalThis.CommentStyles = CommentStyles;\nif (typeof module !== 'undefined' && module.exports) module.exports = CommentStyles;\n",
+  "siblingDetails": {
+    "Comments": {
+      "lunoJson": {
+        "mainClass": "Comments",
+        "entrypoint": {
+          "file": "js/Comments.js",
+          "class": "Comments",
+          "method": "run"
+        },
+        "styles": [
+          "css/comments.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "DocumentReader.js",
+          "DictationWidget.js",
+          "SliderControl.js",
+          "SidePanel.js",
+          "CommunityOracle.js"
+        ],
+        "main": [
+          "js/DialogBoxExtended.js",
+          "js/CommentStyles.js",
+          "js/NameRenderer.js",
+          "js/CommentNode.js",
+          "js/RatingPanel.js",
+          "js/CommentToolbar.js",
+          "js/CommentThreadView.js",
+          "js/UserManager.js",
+          "js/UserAccountDialog.js",
+          "js/MockServerAPI.js",
+          "js/ServerAPI.js",
+          "js/HarnessSettingsManager.js",
+          "js/TestHarness.js",
+          "js/CommentsOverviewContent.js",
+          "js/CommentsStylingContent.js",
+          "js/CommentsAuthIdentityContent.js",
+          "js/CommentsThreadingContent.js",
+          "js/CommentsApiContractContent.js",
+          "js/CommentsDomAnchorContent.js",
+          "js/CommentsAiModerationContent.js",
+          "js/CommentsFederationContent.js",
+          "js/CommentsDeploymentKitContent.js",
+          "js/CommentsInteractiveComponent.js",
+          "js/CommentsStylingLabComponent.js",
+          "js/CommentsAiDictationSimulatorComponent.js",
+          "js/CommentsPromptGeneratorComponent.js",
+          "js/CommentsItemNotes.js",
+          "js/CommentsNotesManager.js",
+          "js/CommentsDocumentEditor.js",
+          "js/CommentsDataRegistry.js",
+          "js/CommentsAardvark.js",
+          "js/Comments.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Comments — Federated Engine &amp; Living Specification</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%; height: 100%; min-height: 100vh;\n      margin: 0; padding: 0; overflow-x: hidden;\n      background-color: #070a13; color: #e2e8f0;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, system-ui, sans-serif;\n    }\n    #app-container { width: 100%; min-height: 100%; position: relative; }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class Comments {\n  constructor() {\n    this.container = null;\n    this.commentView = null;\n    this.userManager = new UserManager();\n    this.styles = new CommentStyles();\n\n    this.serverAPI = new MockServerAPI();\n    this.apiMode = 'mock';\n\n    this.currentUser = null;\n    this.appContainer = null;\n    this.isDebugMode = false;\n    this.globalSortOrder = 'newest';\n    this.topLevelPostBoxContainer = null;\n    this.userAccountDialog = new UserAccountDialog(this);\n    this.activeReplyController = null;\n    this.threadId = 'main';\n    this.toolbar = new CommentToolbar(this);\n  }\n\n  static async run(env) {\n    const instance = new Comments();\n    return await instance.run(env);\n  }\n\n  async run(env) {\n      if (!env || !env.container) {\n        throw new Error('[Comments] run() requires an environment with a valid container.');\n      }\n\n      if (this.rootElement) {\n        this.destroy();\n      }\n\n      this.env = env;\n      this.rootElement = env.container;\n      this.rootElement.innerHTML = '';\n      this.rootElement.style.overflowY = 'auto';\n      this.rootElement.style.minHeight = '100vh';\n      this.rootElement.style.boxSizing = 'border-box';\n      this.rootElement.style.transition = 'margin-left 0.25s cubic-bezier(0.2, 0.0, 0.2, 1), width 0.25s cubic-bezier(0.2, 0.0, 0.2, 1)';\n\n      // Sync Community profiles\n      if (typeof CommunityOracle !== 'undefined' && typeof CommunityOracle.loadProfiles === 'function') {\n        CommunityOracle.loadProfiles();\n      }\n\n      const pages = [\n        { id: 'overview', title: '0. Architecture & Modern Horizon', docClass: () => globalThis.CommentsOverviewContent },\n        { id: 'styling', title: '1. Styling, Theming & Micro-Threads', docClass: () => globalThis.CommentsStylingContent },\n        { id: 'identity', title: '2. Id"
+    },
+    "TouchController": {
+      "lunoJson": {
+        "entrypoint": {
+          "file": "js/TouchController.js",
+          "class": "TouchController",
+          "method": "run"
+        },
+        "styles": [],
+        "library": [
+          "DomBasics.js",
+          "UITools.js"
+        ],
+        "main": [
+          "js/TouchController.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n  <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\">\n  <title>accuCad Touch Controller</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }\n    html, body { width: 100%; height: 100%; overflow: hidden; background: #121212; color: #eee; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; user-select: none; touch-action: none; }\n    #touch-container { width: 100%; height: 100%; position: relative; }\n  </style>\n  <script src=\"../Library/DomBasics.js\" onerror=\"this.onerror=null; this.src='/Library/DomBasics.js';\"></script>\n  <script src=\"../Library/UITools.js\" onerror=\"this.onerror=null; this.src='/Library/UITools.js';\"></script>\n  <script src=\"js/TouchController.js\"></script>\n</head>\n<body>\n  <div id=\"touch-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n        DomBasics.run();\n      }\n      const container = document.getElementById(\"touch-container\") || document.body;\n      const app = new TouchController();\n      app.run({ container: container });\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class TouchController {\n    constructor() {\n      this.env = null;\n      this.rootElement = null;\n      this.trackpadView = null;\n      this.trackpadControls = null;\n      this.statusText = null;\n      \n      this.viewMode = 'rotate'; // 'rotate' | 'pan'\n      this.controlMode = 'sliders'; // 'sliders' | 'paint'\n      this.currentMode = 'rotate'; // Explicit mode parameter preventing runtime crashes\n      \n      this.viewDragging = false;\n      this.viewPinching = false;\n      this.viewThreeFingerDragging = false;\n      this.viewFourFingerDragging = false; // 4-finger drag state\n      this.viewLastX = 0;\n      this.viewLastY = 0;\n      this.viewLastPinchDist = 0;\n      this.viewLastThreeFingerY = 0;\n      this.viewLastFourFingerY = 0; // 4-finger tracking position\n      this.viewLastTapTime = 0;\n      this.viewLastTapX = 0;\n      this.viewLastTapY = 0;\n\n      this.viewVelocityX = 0;\n      this.viewVelocityY = 0;\n      this.viewVelocityZ = 0; // 4-finger sliding velocity\n      this.viewInertiaFrameId = null;\n      this.viewInertiaZFrameId = null; // 4-finger inertia frame\n      \n      this.ctrlDragging = false;\n      this.ctrlLastX = 0;\n      this.ctrlLastY = 0;\n      this.ctrlLastTapTime = 0;\n      this.ctrlLastTapX = 0;\n      this.ctrlLastTapY = 0;\n      this.ctrlTouchStartX = 0;\n      this.ctrlTouchStartY = 0;\n      this.ctrlGestureLock = null; \n      this.ctrlSliderSelectAccumulator = 0;\n      this.ctrlLastAdjustmentTime = 0;\n\n      this.peerConnection = null;\n      this.dataChannel = null;\n\n      this.clientBeaconInterval = null;\n      this.clientPollInterval = null;\n      this.heartbeatInterval = null;\n      this.lastHeartbeatTime = 0;\n      this.isVerified = false;\n      this.roomCode = '';\n\n      this.onTouchStartHandler = null;\n      this.onTouchMoveHandler = nu"
+    },
+    "GameTheoryStory": {
+      "lunoJson": {
+        "mainClass": "GameTheoryStory",
+        "entrypoint": {
+          "file": "js/GameTheoryStory.js",
+          "class": "GameTheoryStory",
+          "method": "run"
+        },
+        "styles": [
+          "css/basicsWithDialogBox.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js"
+        ],
+        "main": [
+          "js/GameTheoryStory.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>GameTheoryStory</title>\n  <link rel=\"stylesheet\" href=\"css/basicsWithDialogBox.css\">\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      overflow-x: hidden;\n      background: #f4f6f9;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "/*\n * ===================== DESIGN DECISIONS =====================\n * FORMAT   Scripted timeline of steps with deterministic goTo(n) rebuilding.\n * RECORD   • Focus Mode (F): hides chrome for pristine screen capture.\n *          • Presenter Prompter (P): floating teleprompter window with casual\n *            spoken riffs, stage direction cues, and retake controls.\n *          • Retake / Replay (R): instant step re-animation for voiceover takes.\n *          • Click-to-advance on stage for seamless wireless clicker/mouse recording.\n * KEYSTROKES Documented in-app via \"⌨ Keys\" button and the '?' / 'H' hotkey modal.\n * SANDBOX  Clicking avatars during dilemma/equilibrium steps lets users test defection\n *          live, watching payouts and the Nash stability test react in real time.\n * BRIDGE   Act 4 explicitly formalizes Mechanism Design (Reverse Game Theory),\n *          how voting/legislation is an Assurance Contract, and why post-labor\n *          coordination of automated abundance requires game-theoretic stability.\n * ============================================================\n */\nclass GameTheoryStory {\n  static NAMES = ['Ana','Ben','Cora','Dev','Eli','Fay','Gus','Hana','Ivo','Jo'];\n  static PATIENCE = [6,0,4,2,1,5,0,3,2,3];\n  static SKIN = ['#f1c27d','#c68642','#8d5524','#e0ac69','#ffdbac','#a1665e','#f1c27d','#c68642','#e0ac69','#8d5524'];\n  static SHIRT = ['#4a6fa5','#b5485d','#5b8c5a','#8e6bbf','#c9803c','#3d8b99','#7a5c58','#a35d8f','#5a7d3a','#c25b3a'];\n  static COLORS = { grey:'#9aa5b1', green:'#2e9e5b', orange:'#f08a24', gold:'#d4a017', refunded:'#5b8def' };\n  static ACTS = ['Setup','The Dilemma','Equilibrium','The Rule','The Post-Labor Lesson'];\n  static WHO = { narrator:'Narrator', crane:'Mr. Crane', barnaby:'Barnaby Quill' };\n  static WPM = 150;\n  static"
+    },
+    "Voting": {
+      "lunoJson": {
+        "mainClass": "RankedChoiceApp",
+        "entrypoint": {
+          "file": "src/RankedChoiceApp.js",
+          "class": "RankedChoiceApp",
+          "method": "run"
+        },
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "CommunityOracle.js"
+        ],
+        "main": [
+          "src/ThemeManager.js",
+          "src/ElectionData.js",
+          "src/PairwiseCalculator.js",
+          "src/Minimax.js",
+          "src/CondorcetTabulator.js",
+          "src/IRV.js",
+          "src/IrvTabulator.js",
+          "src/SankeyDiagram.js",
+          "src/PairwiseMatrixWidget.js",
+          "src/InstantRunoffWidget.js",
+          "src/RankedChoiceApp.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Voting — Ranked Choice & Condorcet Consensus</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%; height: 100%; min-height: 100vh;\n      margin: 0; padding: 0; overflow-x: hidden;\n      background-color: #070a13; color: #e2e8f0;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;\n    }\n    #app-container { width: 100%; min-height: 100%; position: relative; }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "\r\nclass RankedChoiceApp {\r\n  constructor() {\r\n      // Standard standardized constructor\r\n    }\n\n  async init() {\n      try {\n        const params = new URLSearchParams(window.location.search);\n        const urlTheme = params.get('theme');\n        this.applyTheme(urlTheme);\n\n        const urlMethod = params.get('method') || params.get('tab');\n        if (urlMethod) {\n          const val = urlMethod.toLowerCase().includes('irv') ? 'irv' : 'condorcet';\n          const radio = this.tabMethodRadios.find(r => r.value === val);\n          if (radio) {\n            this.tabMethodRadios.forEach(r => r.checked = (r.value === val));\n          }\n        }\n\n        const urlBallot = params.get('ballot');\n        if (urlBallot) {\n          if (urlBallot.startsWith('http://') || urlBallot.startsWith('https://')) {\n            this.ballotSelector.value = 'custom';\n            this.ballotTextArea.value = 'Loading custom ballot data...';\n            this.tabulateButton.disabled = true;\n            try {\n              const raw = await fetch(urlBallot).then(r => r.text());\n              this.ballotTextArea.value = raw.split(/\\r?\\n/).map(l => l.trim()).join('\\n');\n              this.tabulate();\n            } catch (e) {\n              this.widgetContainer.innerHTML = '<p>Error loading custom ballot URL.</p>';\n            }\n          } else {\n            const targetId = urlBallot.toLowerCase().trim();\n            const found = this.electionsList.find(item => item.id.toLowerCase() === targetId);\n            if (found) {\n              this.ballotSelector.value = found.id;\n              await this.loadBallot();\n            } else {\n              await this.loadBallot();\n            }\n          }\n        } else {\n          await this.loadBallot();\n        }\n      } catch (e) {\n        console.wa"
+    },
+    "Community": {
+      "lunoJson": {
+        "mainClass": "CommunityApp",
+        "entrypoint": {
+          "file": "src/CommunityApp.js",
+          "class": "CommunityApp",
+          "method": "run"
+        },
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "CommunityOracle.js"
+        ],
+        "main": [
+          "src/CommunityApp.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Community — Web-of-Trust & Reputation Oracle</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%; height: 100%; min-height: 100vh;\n      margin: 0; padding: 0; overflow-x: hidden;\n      background-color: #070a13; color: #e2e8f0;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;\n    }\n    #app-container { width: 100%; min-height: 100%; position: relative; }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class CommunityApp {\n  constructor() {\n    this.container = null;\n  }\n\n  async run(env) {\n    this.container = env.container;\n    this.container.innerHTML = '';\n\n    const wrap = makeElement('div', {\n      style: {\n        maxWidth: '860px',\n        margin: '40px auto',\n        padding: '24px',\n        background: '#090d16',\n        border: '1.5px solid #232d3f',\n        borderRadius: '12px',\n        color: '#f8fafc',\n        fontFamily: 'system-ui, sans-serif'\n      }\n    }, [\n      makeElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' } }, [\n        makeElement('span', { style: { fontSize: '24px' } }, '🌐'),\n        makeElement('h1', { style: { fontSize: '20px', color: '#00f2fe', margin: 0 } }, 'Community Identity & Reputation Oracle')\n      ]),\n      makeElement('p', { style: { color: '#94a3b8', fontSize: '13px', lineHeight: '1.6' } },\n        'The Community app provides the federated identity ledger and Web-of-Trust reputation vectors. Comments and Voting query this oracle to determine vote weight, prominence scaling, and probationary filtering.'\n      ),\n      makeElement('div', { id: 'community-profiles-grid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginTop: '20px' } })\n    ]);\n\n    this.container.appendChild(wrap);\n\n    const grid = wrap.querySelector('#community-profiles-grid');\n    CommunityOracle.profiles.forEach(prof => {\n      grid.appendChild(makeElement('div', {\n        style: {\n          background: 'rgba(255, 255, 255, 0.03)',\n          border: '1px solid #1e293b',\n          borderRadius: '8px',\n          padding: '12px',\n          display: 'flex',\n          flexDirection: 'column',\n          gap: '6px'\n        }\n      }, [\n        makeElement('"
+    },
+    "BookmarkletWorkshop": {
+      "lunoJson": {
+        "mainClass": "BookmarkletApp",
+        "entrypoint": {
+          "file": "BookmarkletApp.js",
+          "class": "BookmarkletApp",
+          "method": "run"
+        },
+        "library": [
+          "DomBasics.js"
+        ],
+        "main": [
+          "LunoRelayProtocol.js",
+          "JsLanguageDetector.js",
+          "CodeCollapserWidget.js",
+          "PromptCollapserWidget.js",
+          "ResponseGroupWidget.js",
+          "AiStudioQueue.js",
+          "OutboxNotifier.js",
+          "BookmarkletPresets.js",
+          "BookmarkletEncoder.js",
+          "BookmarkletUI.js",
+          "BookmarkletApp.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Bookmarklet Workshop — Luno</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      background: #0d1117;\n      color: #c9d1d9;\n      font-family: monospace;\n    }\n    #app-container {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n      padding: 1rem;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>\n",
+      "entrySnippet": "class BookmarkletApp {\n  constructor() {\n    this.source = \"\";\n    this.targetWindowRef = null;\n    this.connectedTargetOrigin = \"*\";\n    this.messageLogs = [];\n    this.stagedQueue = [];\n    this.setupHostMessageListener();\n  }\n\n  handleIncomingRelayMessage(e) {\n    if (!e || !e.data || typeof e.data !== \"object\") return;\n    var type = e.data.type;\n    if (!type || typeof type !== \"string\") return;\n\n    if (type.startsWith(\"LUNO_GUEST_\") || type.startsWith(\"LUNO_\") || type === \"LUNO_PONG\") {\n      if (e.source) {\n        this.targetWindowRef = e.source;\n      }\n\n      var card = document.getElementById(\"relay-terminal-card\");\n      if (card) card.style.display = \"flex\";\n\n      var badge = document.getElementById(\"relay-status-badge\");\n      if (badge) {\n        badge.textContent = \"AI Studio Connected\";\n        badge.style.background = \"#0d2818\";\n        badge.style.color = \"#3fb950\";\n        badge.style.borderColor = \"#238636\";\n      }\n\n      if (type === \"LUNO_QUEUE_RESPONSE\" && e.data.payload && Array.isArray(e.data.payload.queue)) {\n        this.stagedQueue = e.data.payload.queue;\n        this.logRelaySystem(\"Fetched \" + this.stagedQueue.length + \" JS block(s) from AI Studio Queue.\");\n        this.renderQueueInspectorUI();\n        return;\n      }\n\n      if (type === \"LUNO_SEND_INBOX\" && e.data.payload && e.data.payload.rawText) {\n        this.applyTextToLunoInbox(e.data.payload.rawText, e.data.payload.fingerprint);\n        this.logRelaySystem(\"1-Tap Action: Sent JS snippet directly to Luno Inbox!\");\n        return;\n      }\n\n      var bodyText = e.data.text || e.data.body || \"\";\n      if (e.data.payload && e.data.payload.rawText) {\n        bodyText = e.data.payload.rawText.slice(0, 120) + (e.data.payload.rawText.length > 120 ? \"...\" : \"\");\n      } else if (e.data.p"
+    },
+    "aardvarkBookmarklet": {
+      "lunoJson": {
+        "entrypoint": {
+          "file": "App.js",
+          "class": "AardvarkBookmarkletApp",
+          "method": "run"
+        },
+        "library": [
+          "DomBasics.js"
+        ],
+        "main": [
+          "App.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Aardvark Bookmarklet App</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      background: #0d1117;\n      color: #c9d1d9;\n      font-family: monospace;\n    }\n    #app-container {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class AardvarkBookmarkletApp {\n  constructor() {\n    this.encodedBookmarklet = '';\n  }\n\n  async run(env) {\n    const container = (env && env.container) || document.getElementById('app-root') || document.body;\n    container.innerHTML = '';\n\n    // Fetch the pre-compiled bookmarklet URL\n    try {\n      const res = await fetch('bookmarklet-encoded.txt');\n      if (res.ok) {\n        this.encodedBookmarklet = (await res.text()).trim();\n      }\n    } catch (e) {\n      console.warn('[Aardvark] Could not load bookmarklet-encoded.txt', e);\n    }\n\n    if (!this.encodedBookmarklet) {\n      this.encodedBookmarklet = \"javascript:(function(){alert('Aardvark Bookmarklet loading...');})();\";\n    }\n\n    const wrapper = document.createElement('div');\n    wrapper.style.cssText = [\n      'max-width: 680px;',\n      'margin: 2rem auto;',\n      'padding: 1.5rem;',\n      'font-family: monospace;',\n      'color: #c9d1d9;',\n      'background: #161b22;',\n      'border: 2px solid #8257e5;',\n      'border-radius: 12px;',\n      'box-shadow: 0 8px 32px rgba(130, 87, 229, 0.25);',\n      'display: flex;',\n      'flex-direction: column;',\n      'gap: 1.25rem;'\n    ].join(' ');\n\n    // Header\n    const header = document.createElement('div');\n    header.style.cssText = 'border-bottom: 1px solid #30363d; padding-bottom: 1rem;';\n    header.innerHTML = `\n      <div style=\"display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;\">\n        <h1 style=\"color:#d2a8ff; font-size:1.4rem; margin:0; display:flex; align-items:center; gap:0.5rem;\">\n          🎹 Aardvark YouTube Companion\n        </h1>\n        <span style=\"font-size:0.75rem; background:#271052; color:#d2a8ff; border:1px solid #8257e5; padding:0.2rem 0.6rem; border-radius:12px; font-weight:bold;\">\n          Bookmarklet"
+    },
+    "accuCad": {
+      "lunoJson": {
+        "entrypoint": {
+          "file": "js/Main.js",
+          "class": "Main",
+          "method": "run"
+        },
+        "styles": [],
+        "library": [
+          "AppColorUtils.js",
+          "ColorPicker.js",
+          "HueRingCP.js",
+          "KeyCommandHandler.js",
+          "MidiInputHandler.js",
+          "P2PConnector.js",
+          "QRCodeGenerator.js",
+          "PopupBox.js",
+          "SidePanel.js",
+          "SliderControl.js",
+          "SpinnerWidget.js",
+          "ThreeJSLoader.js",
+          "TriangleCP.js",
+          "UITools.js",
+          "DomBasics.js"
+        ],
+        "main": [
+          "js/AccuDraw.js",
+          "js/ArcSquircleCalc.js",
+          "js/BaseController.js",
+          "js/BezierSquircleCalc.js",
+          "js/CadStorageManager.js",
+          "js/CameraOrbitAnimator.js",
+          "js/CapsuleGeometryCreator.js",
+          "js/ControllerSetup.js",
+          "js/DebugConfig.js",
+          "js/ElementOperations.js",
+          "js/EventHandlers.js",
+          "js/FileUtilities.js",
+          "js/GeneratePoint.js",
+          "js/GeometryUtils3D.js",
+          "js/HighlightUtilities.js",
+          "js/ModelLoader.js",
+          "js/RotaryEncoders.js",
+          "js/RoundingUtils3D.js",
+          "js/SmartDrawKeys.js",
+          "js/Squircle3D.js",
+          "js/SvgLoader.js",
+          "js/TentativePointHandler.js",
+          "js/TransformView.js",
+          "js/ViewManipulator.js",
+          "js/accudraw/AccuDrawLogic.js",
+          "js/accudraw/CompassDrawBridge.js",
+          "js/commands/BaseDrawCommand.js",
+          "js/commands/DeleteElementCommand.js",
+          "js/commands/DrawArcCommand.js",
+          "js/commands/DrawCapsuleCommand.js",
+          "js/commands/DrawCircleCommand.js",
+          "js/BezierVertex.js",
+          "js/UpdateControlPoints.js",
+          "js/commands/DrawCurveCommand.js",
+          "js/commands/DrawPathCommand.js",
+          "js/commands/DrawRectangleCommand.js",
+          "js/commands/MoveElementCommand.js",
+          "js/commands/RotateElementCommand.js",
+          "js/commands/ScaleElementCommand.js",
+          "js/elements/ArcElement.js",
+          "js/elements/CadElement.js",
+          "js/elements/CapsuleElement.js",
+          "js/elements/CurveElement.js",
+          "js/elements/PathElement.js",
+          "js/elements/RectangleElement.js",
+          "js/ui/AccuDrawDiagnostics.js",
+          "js/ui/AccuDrawDialog.js",
+          "js/ui/AccuDrawInput.js",
+          "js/ui/AccuDrawTestHarness.js",
+          "js/ui/AccuDrawUi.js",
+          "js/ui/ViewControls.js",
+          "js/ui/ViewControlsManager.js",
+          "js/Main.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>accuCad</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1117; color: #c9d1d9; font-family: monospace; }\n    #app-container { width: 100%; height: 100%; position: relative; }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class Main {\n  constructor() {\n    this.app = null;\n    this.baseController = null;\n    this.threeDView = null;\n  }\n\n  _exposeGlobals(threeDView, baseController) {\n    if (DebugConfig.exposeThreeDView) globalThis.threeDView = threeDView;\n    if (DebugConfig.exposeBaseController)\n      globalThis.baseController = baseController;\n  }\n\n  async run(env, options = {}) {\n      console.log('[accuCad] run() invoked.');\n      if (this.rootElement) this.destroy();\n\n      if (!env || !env.container) {\n        throw new Error(\n          '[accuCad] run() requires an environment object with a valid container.'\n        );\n      }\n\n      const opts = Object.assign({\n        showSidePanel: true,\n        showCompass: true,\n        showCompassUi: true,\n        cameraPos: { x: 5, y: 5, z: 8 },\n        target: [0, 0.4, 0],\n        background: 0x090d16,\n        enableControls: true,\n        presetGeometry: null,\n        initialTool: 'rectangle',\n        initialPlane: 'top',\n        squircle: 0.35,\n        compassSize: 0.85\n      }, env, options);\n\n      const parentElement = env.container;\n      this.rootElement = parentElement;\n\n      const resetScroll = () => {\n        if (this.rootElement) {\n          this.rootElement.scrollLeft = 0;\n          this.rootElement.scrollTop = 0;\n        }\n      };\n\n      this.rootElement.addEventListener('scroll', resetScroll);\n      this._scrollResetHandler = resetScroll;\n\n      const layoutWrapper = document.createElement('div');\n      layoutWrapper.id = 'accucad-layout-wrapper';\n      layoutWrapper.style.cssText =\n        'display: flex; flex-direction: row; width: 100%; height: 100%; overflow: hidden; position: relative;';\n      parentElement.appendChild(layoutWrapper);\n      this.layoutWrapper = layoutWrapper;\n\n      const canvasId = 'accucad-canvas-' + "
+    },
+    "situation": {
+      "lunoJson": {
+        "mainClass": "SituationApp",
+        "entrypoint": {
+          "file": "js/SituationApp.js",
+          "class": "SituationApp",
+          "method": "run"
+        },
+        "styles": [],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "VideoPlayer.js",
+          "DictationWidget.js",
+          "DocumentReader.js",
+          "SidePanel.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js",
+          "SensitiveContextGate.js"
+        ],
+        "main": [
+          "js/SituationApp.js",
+          "js/SnareDrumAnimation.js",
+          "js/ValueEmberLogo.js",
+          "js/AccuDrawValuation.js",
+          "js/OverviewPage.js",
+          "js/CourtFilingPage.js",
+          "js/AiPerspectivePage.js",
+          "js/ElderAdvocacyPage.js",
+          "js/CaretakerBiasPage.js",
+          "js/CurrentWorkPage.js",
+          "js/ValuationPage.js",
+          "js/SituationSummaries.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Situation App</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      background: #0d1117;\n      color: #c9d1d9;\n      font-family: monospace;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class SituationApp {\n\n  async run(env) {\n        if (!env || !env.container) {\n          throw new Error(\"run() requires an environment object with a valid container.\");\n        }\n        if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n          DomBasics.run();\n        }\n        this.env = env;\n        this.targetElement = env.container;\n        globalThis._situationAppInstance = this;\n\n        this.initializeTheme();\n        this.loadGoogleFont();\n        this.setupState(this.parseRawContent());\n        this.loadAppStyles();\n        this.preloadResources();\n        this.setupKeyboardListeners();\n\n        if (typeof CadPlanAardvark !== 'undefined') {\n          this.aardvark = new CadPlanAardvark({ container: this.targetElement, dossierId: 'situation' });\n          this.aardvark.init();\n        }\n\n        if (typeof CadPlanItemNotes !== 'undefined' && typeof CadPlanItemNotes.subscribe === 'function') {\n          this._unsubNotes = CadPlanItemNotes.subscribe(() => {\n            const wrapper = this.targetElement?.querySelector('.cad-wrapper');\n            if (wrapper && typeof DocumentReader !== 'undefined' && typeof DocumentReader.decorateContainer === 'function') {\n              DocumentReader.decorateContainer(wrapper, {\n                dossierId: 'situation',\n                pageId: this.currentView\n              });\n            }\n          });\n        }\n\n        this._hashChangeHandler = () => this.handleRoute();\n        window.addEventListener('hashchange', this._hashChangeHandler);\n        this.handleRoute();\n      }\n\n  destroy() {\n        if (this._unsubNotes) {\n          try { this._unsubNotes(); } catch (e) {}\n          this._unsubNotes = null;\n        }\n        if (this.aardvark) {\n          this.aardvark.destroy();\n          thi"
+    },
+    "ValuationOfAccudraw": {
+      "lunoJson": {
+        "mainClass": "ValuationOfAccudraw",
+        "entrypoint": {
+          "file": "js/ValuationOfAccudraw.js",
+          "class": "ValuationOfAccudraw",
+          "method": "run"
+        },
+        "styles": [
+          "css/basicsWithDialogBox.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "DictationWidget.js",
+          "DocumentReader.js",
+          "SidePanel.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/ValuationOfAccudraw.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>ValuationOfAccudraw</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      background: #090d16;\n      color: #e2e8f0;\n      overflow-x: hidden;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class ValuationOfAccudraw {\n\n  async run(env) {\n        if (!env || !env.container) {\n          throw new Error(\"[ValuationOfAccudraw] run() requires an environment object with a valid container.\");\n        }\n        if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n          DomBasics.run();\n        }\n        this.env = env;\n        this.isPrintMode = false;\n        globalThis._valuationAppInstance = this;\n        const targetElement = env.container;\n\n        targetElement.innerHTML = '';\n        targetElement.className = 'accudraw-valuation-app';\n\n        if (typeof CadPlanAardvark !== 'undefined') {\n          if (this.aardvark) this.aardvark.destroy();\n          this.aardvark = new CadPlanAardvark({ container: targetElement, dossierId: 'ValuationOfAccudraw' });\n          this.aardvark.init();\n        }\n\n        if (typeof CadPlanItemNotes !== 'undefined' && typeof CadPlanItemNotes.subscribe === 'function') {\n          if (this._unsubNotes) {\n            try { this._unsubNotes(); } catch (e) {}\n          }\n          this._unsubNotes = CadPlanItemNotes.subscribe(() => {\n            if (!this.isPrintMode) {\n              const mainWrap = this.env?.container?.querySelector('.va-container');\n              if (mainWrap && typeof DocumentReader !== 'undefined' && typeof DocumentReader.decorateContainer === 'function') {\n                DocumentReader.decorateContainer(mainWrap, {\n                  dossierId: 'ValuationOfAccudraw',\n                  pageId: 'overview'\n                });\n              }\n            }\n          });\n        }\n\n        if (this._hotkeyHandler) window.removeEventListener('keydown', this._hotkeyHandler);\n        this._hotkeyHandler = (e) => {\n          if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'a' || e."
+    },
+    "JobsAndAI": {
+      "lunoJson": {
+        "mainClass": "JobsAndAI",
+        "entrypoint": {
+          "file": "js/JobsAndAI.js",
+          "class": "JobsAndAI",
+          "method": "run"
+        },
+        "styles": [],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "VideoPlayer.js",
+          "DictationWidget.js",
+          "DocumentReader.js",
+          "SidePanel.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/JobsAndAI.js",
+          "js/GraphicsVideoPage.js",
+          "js/ThesisPage.js",
+          "js/AiPerspectivePage.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>The Automation Horizon — How AI & Robotics Replace All Jobs</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      background: #070a12;\n      color: #cbd5e1;\n      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class JobsAndAI {\n\n  async run(env) {\n      if (!env || !env.container) {\n        throw new Error(\"run() requires an environment object with a valid container.\");\n      }\n      if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n        DomBasics.run();\n      }\n      this.env = env;\n      this.targetElement = env.container;\n      globalThis._jobsAndAiInstance = this;\n\n      this.activeVideoPlayers = [];\n      this.initializeTheme();\n      this.loadGoogleFont();\n      this.setupState();\n      this.loadAppStyles();\n      this.setupKeyboardListeners();\n\n      if (typeof CadPlanAardvark !== 'undefined') {\n        if (this.aardvark) this.aardvark.destroy();\n        this.aardvark = new CadPlanAardvark({ container: this.targetElement, dossierId: 'JobsAndAI' });\n        this.aardvark.init();\n      }\n\n      if (typeof CadPlanItemNotes !== 'undefined' && typeof CadPlanItemNotes.subscribe === 'function') {\n        if (this._unsubNotes) {\n          try { this._unsubNotes(); } catch (e) {}\n        }\n        this._unsubNotes = CadPlanItemNotes.subscribe(() => {\n          const wrapper = this.targetElement?.querySelector('.cad-wrapper');\n          if (wrapper && typeof DocumentReader !== 'undefined' && typeof DocumentReader.decorateContainer === 'function') {\n            DocumentReader.decorateContainer(wrapper, {\n              dossierId: 'JobsAndAI',\n              pageId: this.currentRoute\n            });\n          }\n        });\n      }\n\n      if (this._hashChangeHandler) {\n        window.removeEventListener('hashchange', this._hashChangeHandler);\n      }\n      this._hashChangeHandler = () => this.handleRoute();\n      window.addEventListener('hashchange', this._hashChangeHandler);\n\n      this.handleRoute();\n    }\n\n  destroy() {\n      this.cleanupActiveVideo"
+    },
+    "accudraw": {
+      "lunoJson": {
+        "mainClass": "AccuDrawArchiveApp",
+        "entrypoint": {
+          "file": "js/AccuDrawArchiveApp.js",
+          "class": "AccuDrawArchiveApp",
+          "method": "run"
+        },
+        "styles": [],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "DictationWidget.js",
+          "DocumentReader.js",
+          "SidePanel.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/AccuDrawData.js",
+          "js/AccuDrawArchiveApp.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>AccuDraw Historical Archive</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      background: #080c14;\n      color: #f1f5f9;\n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\n      overflow-x: hidden;\n      overflow-y: auto;\n      scroll-behavior: smooth;\n      -webkit-font-smoothing: antialiased;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100vh;\n      display: flex;\n      flex-direction: column;\n    }\n    /* Elegant, subtle scrollbar styles */\n    ::-webkit-scrollbar {\n      width: 8px;\n      height: 8px;\n    }\n    ::-webkit-scrollbar-track {\n      background: #080c14;\n    }\n    ::-webkit-scrollbar-thumb {\n      background: #1e293b;\n      border-radius: 4px;\n    }\n    ::-webkit-scrollbar-thumb:hover {\n      background: #0284c7;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class AccuDrawArchiveApp {\n\n  constructor() {\n      this.activeSection = \"overview\";\n      this.activeArticle = \"accudraw_page1\";\n      this.viewMode = \"dark\"; // dark, light, print\n      this.selectedPromptId = 1;\n      this.expandedCardId = null;\n      this.aardvark = null;\n      this._unsubNotes = null;\n      this._hashChangeHandler = null;\n      this._pendingScrollBlockId = null;\n    }\n\n  async run(env) {\n      if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n        DomBasics.run();\n      }\n      this.container = (env && env.container) || document.getElementById(\"app-root\") || document.body;\n      globalThis._accudrawArchiveAppInstance = this;\n\n      if (typeof CadPlanAardvark !== 'undefined') {\n        if (this.aardvark) this.aardvark.destroy();\n        this.aardvark = new CadPlanAardvark({ container: this.container, dossierId: 'accudraw' });\n        this.aardvark.init();\n      }\n\n      if (typeof CadPlanItemNotes !== 'undefined' && typeof CadPlanItemNotes.subscribe === 'function') {\n        if (this._unsubNotes) {\n          try { this._unsubNotes(); } catch (e) {}\n        }\n        this._unsubNotes = CadPlanItemNotes.subscribe(() => {\n          const mainEl = this.container?.querySelector('main');\n          if (mainEl && typeof DocumentReader !== 'undefined' && typeof DocumentReader.decorateContainer === 'function') {\n            DocumentReader.decorateContainer(mainEl, {\n              dossierId: 'accudraw',\n              pageId: this.activeSection\n            });\n          }\n        });\n      }\n\n      if (this._hashChangeHandler) {\n        window.removeEventListener('hashchange', this._hashChangeHandler);\n      }\n      this._hashChangeHandler = () => this.handleRoute();\n      window.addEventListener('hashchange', this._hashChangeHan"
+    },
+    "Opus": {
+      "lunoJson": {
+        "mainClass": "Opus",
+        "entrypoint": {
+          "file": "Opus.js",
+          "class": "Opus",
+          "method": "run"
+        },
+        "styles": [
+          "opus.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "DocumentReader.js",
+          "DictationWidget.js",
+          "SidePanel.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js",
+          "SensitiveContextGate.js"
+        ],
+        "main": [
+          "js/OpusRouterComponent.js",
+          "js/OpusEconomicImpactComponent.js",
+          "js/OpusConvergenceStepperLab.js",
+          "js/OpusOverviewContent.js",
+          "js/OpusVerificationContent.js",
+          "js/OpusQ1CadContent.js",
+          "js/OpusQ2NarrativeContent.js",
+          "js/OpusQ3EconomicsContent.js",
+          "js/OpusQ4CockpitContent.js",
+          "js/OpusGrandStrategyContent.js",
+          "Opus.js",
+          "js/OpusSummaries.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>Rob Brown Opus — Master Living Navigation Portal</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      overflow-x: hidden;\n      background-color: #070a13;\n      color: #e2e8f0;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, system-ui, sans-serif;\n    }\n    #app-container {\n      width: 100%;\n      min-height: 100%;\n      position: relative;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class Opus {\n  constructor() {\n    this.reader = null;\n    this.sidePanel = null;\n    this.rootElement = null;\n    this.activePageId = 'overview';\n    this._safeAreaHandler = null;\n  }\n\n  async run(env) {\n      if (this.rootElement) {\n        this.destroy();\n      }\n\n      if (!env || !env.container) {\n        throw new Error('[Opus] run() requires an environment object with a valid container.');\n      }\n\n      if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n        DomBasics.run();\n      }\n\n      this.env = env;\n      this.rootElement = env.container;\n\n      globalThis._opusInstance = this;\n      globalThis._cadPlanInstance = this;\n\n      document.documentElement.style.overflowY = 'auto';\n      document.body.style.overflowY = 'auto';\n\n      this.rootElement.style.overflowX = 'hidden';\n      this.rootElement.style.overflowY = 'visible';\n      this.rootElement.style.height = 'auto';\n      this.rootElement.style.minHeight = '100vh';\n      this.rootElement.style.boxSizing = 'border-box';\n      this.rootElement.style.marginLeft = '0px';\n      this.rootElement.style.width = '100%';\n\n      if (typeof KeyCommandHandler !== 'undefined' && typeof KeyCommandHandler.setPaused === 'function') {\n        KeyCommandHandler.setPaused(true);\n      }\n\n      const pages = [\n        { id: 'overview', title: '0. Master Opus Gateway & 4-Quadrant Portal', docClass: () => globalThis.OpusOverviewContent },\n        { id: 'verification', title: '1. Economic Impact & Public Verification', docClass: () => globalThis.OpusVerificationContent },\n        { id: 'q1_cad', title: '2. Inventions & Spatial CAD (CadPlan, accuCad, accudraw)', docClass: () => globalThis.OpusQ1CadContent },\n        { id: 'q2_narrative', title: '3. Personal Narrative & Legal Reality (situation, Val"
+    },
+    "CadPlan": {
+      "lunoJson": {
+        "mainClass": "CadPlan",
+        "entrypoint": {
+          "file": "CadPlan.js",
+          "class": "CadPlan",
+          "method": "run"
+        },
+        "styles": [
+          "basic3d.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "ThreeJSLoader.js",
+          "DocumentReader.js",
+          "VideoPlayer.js",
+          "DictationWidget.js",
+          "SliderControl.js",
+          "ColorPicker.js",
+          "KeyCommandHandler.js",
+          "SidePanel.js",
+          "CodeMirrorWidget.js",
+          "CommunityOracle.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/SquircleArc.js",
+          "js/CurveDrawerLabComponent.js",
+          "js/CadOriginsGraphicComponent.js",
+          "js/CadEcosystemGraphicComponent.js",
+          "js/CadArchitectureGraphicComponent.js",
+          "js/CadMasterShowcaseComponent.js",
+          "js/CadTouchP2PGraphicComponent.js",
+          "js/CadVisionHeroGraphic.js",
+          "js/Cad2Dto3DRoundTripGraphic.js",
+          "js/CadAudienceMigrationGraphic.js",
+          "js/CadPluginHookSpecGraphic.js",
+          "js/CadErgonomicFreedomGraphic.js",
+          "js/CadCoordinateConverterLab.js",
+          "js/CadRuntimeMatrixGraphic.js",
+          "js/CadAgentTelemetryLab.js",
+          "js/CadAnimatedSvgCompassLab.js",
+          "js/CadIsolatedCompass3DComponent.js",
+          "js/CadModelStudioComponent.js",
+          "js/CadZPlaneElevationLab.js",
+          "js/CadTransformGymLab.js",
+          "js/CadNearestIntersectionLab.js",
+          "js/CadSurfaceNormalLab.js",
+          "js/CadSmartKeyinLab.js",
+          "js/CadTangentArcSwingLab.js",
+          "js/Cad3DSmartLineLab.js",
+          "js/CadVideoClipComponent.js",
+          "js/CadCurveDrawerContent.js",
+          "js/CadTouchP2PContent.js",
+          "js/AccuDrawNumberStreamLab.js",
+          "js/TentativeSnappingLab.js",
+          "js/KeyCommandInteractiveLab.js",
+          "js/CompassAnatomyComponent.js",
+          "js/SvgSmartLineLab.js",
+          "js/SquircleCompassSvg.js",
+          "js/CadPlanNotesManager.js",
+          "js/CadVideoRegistry.js",
+          "js/CadCodeViewerComponent.js",
+          "js/CadPlanMetaContent.js",
+          "js/CadOriginsContent.js",
+          "js/AccuDrawPhilosophyContent.js",
+          "js/AccuCadAuditContent.js",
+          "js/KeyCommandEngineContent.js",
+          "js/CurveTouchContent.js",
+          "js/CadInteractiveDemoContent.js",
+          "js/CadLunoEcosystemContent.js",
+          "js/CadArchitectureDecisionsContent.js",
+          "js/CadCraftIntegrationContent.js",
+          "js/CadITwinParityContent.js",
+          "js/CadVisionInterviewContent.js",
+          "js/curve/BezierVertex.js",
+          "js/curve/UpdateControlPoints.js",
+          "js/curve/Curve.js",
+          "js/curve/CurveDraw.js",
+          "js/CadStudioDemoComponent.js",
+          "js/CadTouchPairingDialog.js",
+          "js/CadPromptBundlerDialog.js",
+          "ModelLoader.js",
+          "Simple3dShapes.js",
+          "CadPlan.js",
+          "js/CadPlanContentConverter.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>CAD Plan — Architecture & Specification Dossier</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      overflow-x: hidden;\n      background-color: #0f141c;\n      color: #e2e8f0;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, system-ui, sans-serif;\n    }\n    #app-container {\n      width: 100%;\n      min-height: 100%;\n      position: relative;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class CadPlan {\n\n  constructor() {\n      this.reader = null;\n      this.sidePanel = null;\n      this.rootElement = null;\n      this.activePageId = 'meta';\n      this._safeAreaHandler = null;\n      this._unsubNotes = null;\n      this._pages = [];\n    }\n\n  async run(env) {\n          if (this.rootElement) {\n            this.destroy();\n          }\n\n          if (!env || !env.container) {\n            throw new Error('[CadPlan] run() requires an environment object with a valid container.');\n          }\n\n          if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n            DomBasics.run();\n          }\n\n          this.env = env;\n          this.rootElement = env.container;\n          globalThis._cadPlanInstance = this;\n\n          document.documentElement.style.overflowY = 'auto';\n          document.body.style.overflowY = 'auto';\n\n          this.rootElement.style.overflowX = 'hidden';\n          this.rootElement.style.overflowY = 'visible';\n          this.rootElement.style.height = 'auto';\n          this.rootElement.style.minHeight = '100vh';\n          this.rootElement.style.boxSizing = 'border-box';\n          this.rootElement.style.marginLeft = '0px';\n          this.rootElement.style.width = '100%';\n\n          if (typeof KeyCommandHandler !== 'undefined' && typeof KeyCommandHandler.setPaused === 'function') {\n            KeyCommandHandler.setPaused(true);\n          }\n\n          const pages = [\n            { id: 'meta', title: '0. Living Dossier & Methodology', docClass: () => globalThis.CadPlanMetaContent },\n            { id: 'origins', title: '1. My Story & The Playbook', docClass: () => globalThis.CadOriginsContent },\n            { id: 'philosophy', title: '2. The Squircle Compass', docClass: () => globalThis.AccuDrawPhilosophyContent },\n          "
+    },
+    "EconomicsOfAutomation": {
+      "lunoJson": {
+        "mainClass": "EconomicsOfAutomation",
+        "entrypoint": {
+          "file": "js/EconomicsOfAutomation.js",
+          "class": "EconomicsOfAutomation",
+          "method": "run"
+        },
+        "styles": [
+          "css/robotDividend.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "DocumentReader.js",
+          "SidePanel.js",
+          "DictationWidget.js",
+          "CommunityOracle.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/ArticleContent.js",
+          "js/ColonyContent.js",
+          "js/EarthContent.js",
+          "js/DoomerContent.js",
+          "js/DoomerDebateComponent.js",
+          "js/TaxChartComponent.js",
+          "js/ParadigmsContent.js",
+          "js/ParadigmsComparisonComponent.js",
+          "js/ObjectionsContent.js",
+          "js/KineticContent.js",
+          "js/RulesContent.js",
+          "js/GameTheoryContent.js",
+          "js/AiRulesContent.js",
+          "js/EconomicsOfAutomation.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>The Robot Dividend & Economics of Automation</title>\n  <script>\n    (function() {\n      try {\n        var theme = localStorage.getItem(\"robot_dividend_theme\");\n        if (theme === \"dark\" || (!theme && window.matchMedia && window.matchMedia(\"(prefers-color-scheme: dark)\").matches)) {\n          document.documentElement.classList.add(\"theme-dark\");\n          document.addEventListener(\"DOMContentLoaded\", function() {\n            document.body.classList.add(\"theme-dark\");\n          });\n        }\n      } catch (e) {}\n    })();\n  </script>\n  <link rel=\"stylesheet\" href=\"css/robotDividend.css\">\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      overflow-x: hidden;\n      background-color: var(--reader-bg, #faf7f2);\n      color: var(--reader-text, #1f242e);\n      font-family: var(--reader-font-body, 'Newsreader', Georgia, serif);\n    }\n    body.theme-dark {\n      background-color: #0f141c;\n      color: #e2e8f0;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class EconomicsOfAutomation {\n  constructor() {\n    this.reader = null;\n    this.sidePanel = null;\n  }\n\n  static async run(env) {\n    const instance = new EconomicsOfAutomation();\n    return await instance.run(env);\n  }\n\n  async run(env) {\n        if (!env || !env.container) {\n          throw new Error(\"[EconomicsOfAutomation] run() requires an environment object with a valid container.\");\n        }\n\n        if (this.rootElement) {\n          this.destroy();\n        }\n\n        if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n          DomBasics.run();\n        }\n\n        this.env = env;\n        this.rootElement = env.container;\n        this.rootElement.innerHTML = '';\n        this.rootElement.style.overflowY = 'visible';\n        this.rootElement.style.overflowX = 'hidden';\n        this.rootElement.style.minHeight = '100vh';\n        this.rootElement.style.boxSizing = 'border-box';\n        this.rootElement.style.transition = 'margin-left 0.25s cubic-bezier(0.2, 0.0, 0.2, 1), width 0.25s cubic-bezier(0.2, 0.0, 0.2, 1)';\n\n        const pages = [\n          { id: 'dividend', title: '1. The Robot Dividend', group: 'core', docClass: () => globalThis.ArticleContent },\n          { id: 'colony', title: '2. The 100,000 Colony', group: 'core', docClass: () => globalThis.ColonyContent },\n          { id: 'earth', title: '3. Earth Transition', group: 'core', docClass: () => globalThis.EarthContent },\n          { id: 'statusquo', title: '4. The Status Quo Trap', group: 'response', docClass: () => globalThis.KineticContent },\n          { id: 'doomer', title: '5. The Doomer Loop', group: 'response', docClass: () => globalThis.DoomerContent },\n          { id: 'paradigms', title: '6. The Three Visions', group: 'response', docClass: () => globalThis.ParadigmsConte"
+    },
+    "QuoraToys": {
+      "lunoJson": {
+        "mainClass": "QuoraToysApp",
+        "entrypoint": {
+          "file": "js/QuoraToysApp.js",
+          "class": "QuoraToysApp",
+          "method": "run"
+        },
+        "styles": [
+          "css/basicsWithDialogBox.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "DocumentReader.js",
+          "SidePanel.js",
+          "ColorPicker.js",
+          "DictationWidget.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/AppColorUtils.js",
+          "js/HueRingCP.js",
+          "js/TriangleCP.js",
+          "js/GeometryUtils.js",
+          "js/BezierVertex.js",
+          "js/UpdateControlPoints.js",
+          "js/CurveFitter.js",
+          "js/StudioGeometry.js",
+          "js/StudioEngine.js",
+          "js/StudioSvgRenderer.js",
+          "js/QuoraCleanStudioDialog.js",
+          "js/QuoraLogger.js",
+          "js/QuoraCurveAnalyzer.js",
+          "js/QuoraStrokeManager.js",
+          "js/QuoraPaintManager.js",
+          "js/QuoraExportManager.js",
+          "js/QuoraGestureMachine.js",
+          "js/QuoraImageManager.js",
+          "js/QuoraTextManager.js",
+          "js/QuoraKnotManager.js",
+          "js/QuoraInSituHUD.js",
+          "js/QuoraControlPanel.js",
+          "js/QuoraToys.js",
+          "js/QuoraToysContent.js",
+          "js/QuoraAnnotationComponent.js",
+          "js/QuoraStudioComponent.js",
+          "js/QuoraBookmarkletComponent.js",
+          "js/QuoraExtensionComponent.js",
+          "js/QuoraArchiverComponent.js",
+          "js/QuoraToysApp.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>QuoraToys</title>\n  <link rel=\"stylesheet\" href=\"css/basicsWithDialogBox.css\">\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      overflow-x: hidden;\n      background: #0b0f19;\n    }\n    #app-root {\n      width: 100%;\n      min-height: 100%;\n      box-sizing: border-box;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-root\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-root\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class QuoraToysApp {\n  constructor() {\n    this.reader = null;\n    this.sidePanel = null;\n    this.rootElement = null;\n    this.activePageId = 'studio';\n  }\n\n  async run(env) {\n        if (this.rootElement) this.destroy();\n\n        if (!env || !env.container) {\n          throw new Error('[QuoraToysApp] run() requires an environment object with a valid container.');\n        }\n\n        if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n          DomBasics.run();\n        }\n\n        this.env = env;\n        this.rootElement = env.container;\n        this.viewMode = 'app';\n        this.activePageId = 'studio';\n        globalThis._quoraToysAppInstance = this;\n\n        const hash = (window.location.hash || '').replace(/^#\\/?/, '').split('/')[0];\n        const docHashes = ['studio', 'bookmarklet', 'extension', 'archiver', 'vision', 'architecture', 'annotation', 'docs'];\n        if (hash && docHashes.includes(hash)) {\n          await this.openDocsView(hash === 'docs' ? 'studio' : hash);\n        } else {\n          this.openAppView();\n        }\n\n        return this;\n      }\n  _buildSidePanel(pages) {\n      if (!this.sidePanel) return;\n\n      this.sidePanel.header.innerHTML = '';\n      const headerTitle = document.createElement('div');\n      headerTitle.style.cssText = 'font-family: monospace; font-size: 11px; font-weight: 800; color: #00e676; display: flex; align-items: center; gap: 8px; flex: 1;';\n      headerTitle.innerHTML = '<span>📖</span><span>Docs &amp; Living Spec</span>';\n\n      const closeBtn = document.createElement('button');\n      closeBtn.className = 'dr-nav-btn';\n      closeBtn.style.cssText = 'padding: 3px 8px; font-size: 10px; border-radius: 4px;';\n      closeBtn.textContent = '✕';\n      closeBtn.onclick = () => this.sidePanel.close();\n\n "
+    },
+    "HomeSetup": {
+      "lunoJson": {
+        "mainClass": "HomeSetup",
+        "entrypoint": {
+          "file": "HomeSetup.js",
+          "class": "HomeSetup",
+          "method": "run"
+        },
+        "styles": [
+          "basic3d.css"
+        ],
+        "library": [
+          "DomBasics.js",
+          "UITools.js",
+          "ThreeJSLoader.js",
+          "DocumentReader.js",
+          "DictationWidget.js",
+          "SidePanel.js",
+          "SupabaseCommentsAdapter.js",
+          "CadPlanDataRegistry.js",
+          "CadPlanItemNotes.js",
+          "CadPlanDocumentEditor.js",
+          "CadPlanAardvark.js"
+        ],
+        "main": [
+          "js/HomeFleetVisualizer.js",
+          "js/HomeTopologyContent.js",
+          "js/HomeNetworkContent.js",
+          "js/HomeStorageContent.js",
+          "js/HomeNodesContent.js",
+          "js/HomeOrchestrationContent.js",
+          "js/HomeSecretsContent.js",
+          "js/HomeHandoffContent.js",
+          "js/HomeHandoffComponent.js",
+          "js/HomeDictationContent.js",
+          "js/HomeDictationDocsData.js",
+          "js/HomeDictationStudioComponent.js",
+          "js/CadPromptBundlerDialog.js",
+          "js/CadPlanNotesManager.js",
+          "HomeSetup.js",
+          "js/HomeSummaries.js"
+        ]
+      },
+      "indexHtml": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\">\n  <title>HomeSetup — Home Infrastructure &amp; Fleet Dossier</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    html, body {\n      width: 100%;\n      height: 100%;\n      min-height: 100vh;\n      margin: 0;\n      padding: 0;\n      overflow-x: hidden;\n      background-color: #0f141c;\n      color: #e2e8f0;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, system-ui, sans-serif;\n    }\n    #app-container {\n      width: 100%;\n      min-height: 100%;\n      position: relative;\n    }\n  </style>\n  <script src=\"/Library/LunoLoader.js\" onerror=\"this.onerror=null; (function(el){ var u=(window.location.hostname.endsWith('.github.io')?window.location.hostname.split('.')[0]:'karmatics'); el.src='https://'+u+'.github.io/Library/LunoLoader.js'; el.onerror=function(){ el.onerror=null; el.src='https://karmatics.github.io/Library/LunoLoader.js'; }; })(this);\"></script>\n</head>\n<body>\n  <div id=\"app-container\"></div>\n  <script>\n    document.addEventListener(\"DOMContentLoaded\", function() {\n      if (typeof LunoLoader !== \"undefined\") {\n        LunoLoader.loadApp(\"app-container\");\n      }\n    });\n  </script>\n</body>\n</html>",
+      "entrySnippet": "class HomeSetup {\n\n  constructor() {\n      this.reader = null;\n      this.sidePanel = null;\n      this.rootElement = null;\n      this.activePageId = 'topology';\n      this._safeAreaHandler = null;\n      this._unsubNotes = null;\n      this._pages = [];\n    }\n\n  async run(env) {\n          if (this.rootElement) {\n            this.destroy();\n          }\n\n          if (!env || !env.container) {\n            throw new Error('[HomeSetup] run() requires an environment object with a valid container.');\n          }\n\n          if (typeof DomBasics !== 'undefined' && typeof DomBasics.run === 'function') {\n            DomBasics.run();\n          }\n\n          this.env = env;\n          this.rootElement = env.container;\n\n          globalThis._homeSetupInstance = this;\n          globalThis._cadPlanInstance = this;\n\n          document.documentElement.style.overflowY = 'auto';\n          document.body.style.overflowY = 'auto';\n\n          this.rootElement.style.overflowX = 'hidden';\n          this.rootElement.style.overflowY = 'visible';\n          this.rootElement.style.height = 'auto';\n          this.rootElement.style.minHeight = '100vh';\n          this.rootElement.style.boxSizing = 'border-box';\n          this.rootElement.style.marginLeft = '0px';\n          this.rootElement.style.width = '100%';\n\n          if (typeof KeyCommandHandler !== 'undefined' && typeof KeyCommandHandler.setPaused === 'function') {\n            KeyCommandHandler.setPaused(true);\n          }\n\n          const pages = [\n            { id: 'topology', title: '0. Hardware Topology & Fleet Matrix', docClass: () => globalThis.HomeTopologyContent },\n            { id: 'network', title: '1. Local Network & Connection Mesh', docClass: () => globalThis.HomeNetworkContent },\n            { id: 'storage', title: '2. Shared Storage & "
+    }
+  }
+}

@@ -81,7 +81,7 @@ class Portal {
   }
 
   _renderFrontPageMode() {
-        this._teardownActiveSubView();
+        this._teardownDocumentReader();
         document.body.classList.remove('theme-dark', 'theme-blueprint', 'theme-phosphor');
         this.rootElement.innerHTML = '';
 
@@ -90,10 +90,6 @@ class Portal {
 
         const container = makeElement('main', { className: 'pt-container' });
         container.appendChild(this._buildHeroSection());
-
-        const builderMount = makeElement('div', { id: 'pt-selective-builder-mount' });
-        container.appendChild(builderMount);
-
         container.appendChild(this._buildEcosystemStrip());
         container.appendChild(this._buildQuickDoors());
         container.appendChild(this._buildChapterDirectory());
@@ -107,10 +103,6 @@ class Portal {
         shell.appendChild(container);
         this.rootElement.appendChild(shell);
 
-        if (typeof PortalPromptBuilder !== 'undefined') {
-          PortalPromptBuilder.render(builderMount, this);
-        }
-
         if (typeof CadPlanAardvark !== 'undefined' && !this.aardvark) {
           this.aardvark = new CadPlanAardvark({
             container: this.rootElement,
@@ -118,103 +110,102 @@ class Portal {
             documentReader: null
           });
           this.aardvark.init();
+          const origOpen = this.aardvark._openNoteOnSelected.bind(this.aardvark);
+          this.aardvark._openNoteOnSelected = (tab) => {
+            return origOpen(tab || this.aardvark._preferredTab || 'note');
+          };
         }
 
-        const attachOverlay = () => {
-          if (typeof UniversalCommentsOverlay !== 'undefined' && shell.isConnected) {
-            UniversalCommentsOverlay.attach(shell, { dossierId: 'Portal', pageId: 'frontpage' });
-          }
-        };
-        if (typeof UniversalCommentsOverlay !== 'undefined') {
-          attachOverlay();
-        } else if (typeof LunoLoader !== 'undefined' && typeof LunoLoader.ensureCommentsLoaded === 'function') {
-          LunoLoader.ensureCommentsLoaded().then(attachOverlay).catch(() => {});
+        if (!this._frontCommentsSyncBound) {
+          this._frontCommentsSyncBound = true;
+          window.addEventListener('portal-comments-updated', () => {
+            if (this.mode === 'frontpage') {
+              const gridEl = document.getElementById('pt-pillars-grid');
+              if (gridEl) this._populateGrid(gridEl);
+            }
+          });
         }
       }
+
   _buildTopBar() {
-      const isUnlocked = typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked();
+        const isUnlocked = typeof SensitiveContextGate !== 'undefined' && SensitiveContextGate.isUnlocked();
 
-      const btnComposed = makeElement('button', {
-        className: 'pt-btn pt-btn-emerald',
-        onclick: () => this.openComposedPage()
-      }, '🧩 Composed Page');
-      this._bindGlowTip(btnComposed, 'Read your selected multi-document partial slices as one unified living page');
-
-      const btnHub = makeElement('button', {
-        className: 'pt-btn pt-btn-purple',
-        onclick: () => {
-          if (typeof DocumentReader !== 'undefined' && typeof DocumentReader.openCommentsHub === 'function') {
-            DocumentReader.openCommentsHub({ dossierId: null });
-          }
-        }
-      }, '💬 Comments Hub');
-      this._bindGlowTip(btnHub, 'Browse, resolve, and combine comments across all documents');
-
-      const btnTour = makeElement('button', {
-        className: 'pt-btn pt-btn-cyan',
-        onclick: () => PortalModals.openGuidedTourDialog(this)
-      }, '✨ Guided Tour');
-      this._bindGlowTip(btnTour, '4-step interactive walkthrough of the apps, reading, and verification tools');
-
-      const btnKeys = makeElement('button', {
-        className: 'pt-btn',
-        onclick: () => PortalModals.openVisitorKeysDialog(this)
-      }, '🔑 Keys & AI Export');
-      this._bindGlowTip(btnKeys, 'Export clean Markdown & learn how to query this whole archive with any AI');
-
-      const btnJson = makeElement('button', {
-        className: 'pt-btn',
-        onclick: () => PortalModals.openSummaryJsonDialog()
-      }, '⚙️ Summary JSON');
-      this._bindGlowTip(btnJson, 'Scan live project files and generate a structured summaries.json bundle');
-
-      const btnDoc = makeElement('button', {
-        className: 'pt-btn',
-        onclick: () => this.openInDocumentReader('spear_drawing')
-      }, '📖 Document View');
-
-      const btnInspect = makeElement('button', {
-        className: 'pt-btn pt-btn-purple',
-        onclick: () => {
-          if (this.aardvark) this.aardvark.toggle();
-        }
-      }, '🔍 Inspect');
-
-      const btnGate = makeElement('button', {
-        className: isUnlocked ? 'pt-btn pt-btn-amber' : 'pt-btn',
-        onclick: () => {
-          if (typeof SensitiveContextGate === 'undefined') return;
-          if (SensitiveContextGate.isUnlocked()) {
-            SensitiveContextGate.lock();
-            this.refresh();
-          } else {
-            const code = prompt('Enter optional access code to view sensitive family context:');
-            if (code && SensitiveContextGate.unlockWithCode(code)) {
-              this.refresh();
-            } else if (code !== null) {
-              alert('Access code not recognized.');
+        const btnMap = makeElement('button', {
+          className: 'pt-btn pt-btn-cyan',
+          onclick: () => {
+            if (typeof PortalConstellationStage !== 'undefined') {
+              PortalConstellationStage.openExpandedStage(this, { originEl: document.getElementById('pt-hero-constellation-box') });
             }
           }
-        }
-      }, isUnlocked ? '🔓 Sensitive Unlocked' : '🔒 Sensitive Context');
+        }, '🕸️ Spatial Map');
+        this._bindGlowTip(btnMap, 'Expand the interactive SVG map to view full contents, live split previews & tethered comments');
 
-      return makeElement('header', { className: 'pt-topbar' }, [
-        makeElement('div', { className: 'pt-brand', onclick: () => { this.activeCategory = 'all'; this.searchQuery = ''; this.refresh(); } }, [
-          makeElement('span', { className: 'pt-brand-dot' }),
-          makeElement('span', { className: 'pt-brand-title' }, 'ROB BROWN • LIVING PORTAL'),
-          makeElement('span', { className: 'pt-brand-sub' }, 'Portal v2.0 SPA')
-        ]),
-        makeElement('div', { className: 'pt-actions' }, [btnComposed, btnHub, btnTour, btnKeys, btnJson, btnDoc, btnInspect, btnGate])
-      ]);
-    }
+        const btnDemo = makeElement('button', {
+          className: 'pt-btn pt-btn-purple',
+          onclick: () => {
+            if (typeof PortalConstellationStage !== 'undefined') {
+              PortalConstellationStage.runDemo30s(this, document.getElementById('pt-hero-constellation-box'));
+            }
+          }
+        }, '▶ 30s Demo');
+        this._bindGlowTip(btnDemo, 'Play a 30-second animated tour of the expanding map, live document viewer & commenting');
+
+        const btnCommentAny = makeElement('button', {
+          className: 'pt-btn pt-btn-emerald',
+          onclick: () => this.startCommentOnAnythingMode()
+        }, '💬 Comment on Anything');
+        this._bindGlowTip(btnCommentAny, 'Click any card, paragraph, or element on this page to leave a comment or directive');
+
+        const btnTour = makeElement('button', {
+          className: 'pt-btn',
+          onclick: () => PortalModals.openGuidedTourDialog(this)
+        }, '✨ Tour');
+
+        const btnKeys = makeElement('button', {
+          className: 'pt-btn',
+          onclick: () => PortalModals.openVisitorKeysDialog(this)
+        }, '🔑 Keys & AI');
+
+        const btnJson = makeElement('button', {
+          className: 'pt-btn',
+          onclick: () => PortalModals.openSummaryJsonDialog()
+        }, '⚙️ JSON');
+
+        const btnDoc = makeElement('button', {
+          className: 'pt-btn',
+          onclick: () => this.openInDocumentReader('spear_drawing')
+        }, '📖 Doc View');
+
+        const btnGate = makeElement('button', {
+          className: isUnlocked ? 'pt-btn pt-btn-amber' : 'pt-btn',
+          onclick: () => {
+            if (typeof SensitiveContextGate === 'undefined') return;
+            if (SensitiveContextGate.isUnlocked()) {
+              SensitiveContextGate.lock();
+              this.refresh();
+            } else {
+              const code = prompt('Enter optional access code to view sensitive family context:');
+              if (code && SensitiveContextGate.unlockWithCode(code)) {
+                this.refresh();
+              } else if (code !== null) {
+                alert('Access code not recognized.');
+              }
+            }
+          }
+        }, isUnlocked ? '🔓 Unlocked' : '🔒 Sensitive');
+
+        return makeElement('header', { className: 'pt-topbar' }, [
+          makeElement('div', { className: 'pt-brand', onclick: () => { this.activeCategory = 'all'; this.searchQuery = ''; this.refresh(); } }, [
+            makeElement('span', { className: 'pt-brand-dot' }),
+            makeElement('span', { className: 'pt-brand-title' }, 'ROB BROWN • LIVING PORTAL'),
+            makeElement('span', { className: 'pt-brand-sub' }, 'Portal v1.1')
+          ]),
+          makeElement('div', { className: 'pt-actions' }, [btnMap, btnDemo, btnCommentAny, btnTour, btnKeys, btnJson, btnDoc, btnGate])
+        ]);
+      }
 
   _buildHeroSection() {
-        const openAppBtn = (proj, cls, label) => makeElement('button', {
-          className: cls,
-          onclick: () => this.openProjectInPlace(proj)
-        }, label);
-
-        const left = makeElement('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' } }, [
+        const topIntro = makeElement('div', { className: 'pt-hero-top-grid' }, [
           makeElement('div', {}, [
             makeElement('div', { className: 'pt-kicker' }, 'Rob Brown • Family Situation, Personal Record & Work (Updated Nov 2026)'),
             makeElement('h1', { className: 'pt-hero-h1' }, 'Rob Brown: Family Situation, Financial Record & Life\'s Work.'),
@@ -222,266 +213,36 @@ class Portal {
               'Everything in one place—starting with my current situation (housing stabilized in Chico as of November 2026, while remaining out of contact—not by my choice—with all of my blood relatives, including my 94-year-old mother, the sister I used to speak with regularly, and my 12-year-old daughter Stella in San Francisco). Carrying those twin separations at the same time weighed heavily enough to push me into an unstable mental-health crisis I nearly didn\'t survive. Alongside that is the documented record of my career—I have done very well in environments suited to my technical strengths (creating billions in value at Bentley Systems), while misaligned situations go poorly—and my active software and writing.'
             ),
             makeElement('div', { className: 'pt-hero-subnote' }, [
-              makeElement('div', { style: { marginBottom: '6px' } }, [
-                makeElement('strong', { style: { color: '#00f2fe' } }, 'True Single-Page App + Partial Pages: '),
-                'Open any document right inside Portal in-place (keeping your comments, navigation, and partial selections intact), or click nodes on the constellation ring to inspect them in the tree builder below.'
+              makeElement('div', { style: { marginBottom: '4px' } }, [
+                makeElement('strong', { style: { color: '#00f2fe' } }, 'For Visitors: '),
+                'Use the interactive map below to expand any domain, read full document contents right inside the workspace, comment on anything, or copy a single briefing prompt into ChatGPT, Claude, or Gemini.'
               ]),
               makeElement('div', {}, [
                 makeElement('strong', { style: { color: '#34d399' } }, 'Why I Built This (Stability & Next Steps): '),
-                'My mental health and stability come first. Executive dysfunction and avoiding overwhelming paperwork (such as leaving legal mail unopened during a breakdown, part of what my Social Security disability claim addresses) have gotten me into real trouble—so I keep everything organized here to load straight into an AI without re-explaining painful history, get clear next steps, and update documents or software via Luno.'
+                'My mental health and stability come first. Executive dysfunction and avoiding overwhelming paperwork (such as leaving legal mail unopened during a breakdown, part of what my Social Security disability claim addresses) have gotten me into real trouble—so I keep everything structured here to load into an AI without re-explaining painful history, get clear next steps, and update documents or software via Luno.'
               ])
             ])
           ]),
           makeElement('div', { className: 'pt-hero-keys-strip' }, [
-            openAppBtn('situation', 'pt-btn pt-btn-amber', '⚖️ Situation Document'),
-            openAppBtn('ValuationOfAccudraw', 'pt-btn pt-btn-emerald', '📊 Valuation Document'),
-            openAppBtn('Opus', 'pt-btn', '🏛️ Master Opus Document'),
-            openAppBtn('CadPlan', 'pt-btn', '📐 CadPlan (Spec + 3D)'),
-            openAppBtn('EconomicsOfAutomation', 'pt-btn pt-btn-emerald', '🤖 Economics Essay'),
-            openAppBtn('QuoraToys', 'pt-btn pt-btn-purple', '〰️ Curve App'),
-            makeElement('a', { href: PortalData.resolveAppUrl('Luno'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, '🌙 Luno Workspace ↗')
+            makeElement('a', { href: PortalData.resolveAppUrl('situation'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-amber' }, '⚖️ Situation Document ↗'),
+            makeElement('a', { href: PortalData.resolveAppUrl('ValuationOfAccudraw'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-emerald' }, '📊 Valuation Document ↗'),
+            makeElement('a', { href: PortalData.resolveAppUrl('Opus'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '🏛️ Master Opus Document ↗'),
+            makeElement('a', { href: PortalData.resolveAppUrl('Luno'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-cyan' }, '🌙 Luno Workspace ↗'),
+            makeElement('a', { href: PortalData.resolveAppUrl('CadPlan'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn' }, '📐 CadPlan (Spec + 3D) ↗'),
+            makeElement('a', { href: PortalData.resolveAppUrl('QuoraToys'), target: '_blank', rel: 'noopener noreferrer', className: 'pt-btn pt-btn-purple' }, '〰️ Curve App ↗'),
+            makeElement('button', { className: 'pt-btn pt-btn-emerald', onclick: () => this.startCommentOnAnythingMode() }, '💬 Comment on Anything')
           ])
         ]);
 
-        const constellationMount = makeElement('div', {
-          id: 'pt-constellation-mount',
-          style: { flex: '1', width: '100%', display: 'flex', alignItems: 'center' }
-        });
-
-        const statusLegend = makeElement('div', {
-          id: 'pt-constellation-legend',
-          style: {
-            borderTop: '1px solid #151f30',
-            paddingTop: '7px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '6px',
-            fontFamily: 'var(--pt-mono)',
-            fontSize: '10px',
-            color: '#94a3b8'
-          }
-        }, [
-          makeElement('span', {}, 'Node = jump to Tree below • [+] pill = cycle Off/Sum/Core/Full')
-        ]);
-
-        const refreshConstellation = (force = false) => {
-          if (!force && !constellationMount.isConnected) return;
-          constellationMount.innerHTML = '';
-          constellationMount.appendChild(this._buildConstellationSvg());
-        };
-
-        const right = makeElement('div', { className: 'pt-constellation-box', 'data-uco-ignore': 'true' }, [
-          makeElement('div', { className: 'pt-visual-tabs' }, [
-            makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '11px', fontWeight: '800', color: '#00f2fe' } }, '🕸️ Ecosystem Constellation Ring'),
-            makeElement('span', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', color: '#94a3b8' } }, '12 Connected Projects')
-          ]),
-          constellationMount,
-          statusLegend
-        ]);
-
-        refreshConstellation(true);
-        if (typeof PartialDocumentEngine !== 'undefined') {
-          if (this._unsubConstellationPartial) this._unsubConstellationPartial();
-          this._unsubConstellationPartial = PartialDocumentEngine.subscribe(() => refreshConstellation(false));
-        }
-        if (typeof MockServerAPI !== 'undefined') {
-          if (this._unsubConstellationComments) this._unsubConstellationComments();
-          this._unsubConstellationComments = MockServerAPI.subscribe(() => refreshConstellation(false));
-        }
-
-        return makeElement('section', { className: 'pt-hero', 'data-block-id': 'portal_hero' }, [left, right]);
+        const svgStageBox = this._buildConstellationSvg();
+        return makeElement('section', { className: 'pt-hero pt-hero-stage-layout', 'data-block-id': 'portal_hero' }, [topIntro, svgStageBox]);
       }
+
   _buildConstellationSvg() {
-        const svg = makeElement('svg:svg', {
-          viewBox: '0 0 480 280',
-          width: '100%',
-          height: '252px',
-          style: { display: 'block' },
-          'data-uco-ignore': 'true'
-        });
-
-        const defs = makeElement('svg:defs', {}, [
-          makeElement('svg:filter', { id: 'pt-glow' }, [
-            makeElement('svg:feGaussianBlur', { stdDeviation: '3', result: 'blur' }),
-            makeElement('svg:feMerge', {}, [
-              makeElement('svg:feMergeNode', { in: 'blur' }),
-              makeElement('svg:feMergeNode', { in: 'SourceGraphic' })
-            ])
-          ])
-        ]);
-        svg.appendChild(defs);
-
-        const comp = typeof PartialDocumentEngine !== 'undefined' ? PartialDocumentEngine.getActiveComposition() : null;
-        const catalog = typeof PortalContentExtractor !== 'undefined' ? PortalContentExtractor.getCatalog() : [];
-        const docModes = comp?.docModes || {};
-
-        const cmtCounts = this._constellationCommentCounts || {};
-        if (typeof MockServerAPI !== 'undefined' && !this._constellationCountsLoading) {
-          this._constellationCountsLoading = true;
-          MockServerAPI.getSharedInstance().getAllThreadsSummary(null).then(threads => {
-            const next = {};
-            threads.filter(t => t.status !== 'resolved').forEach(t => {
-              next[t.dossierId] = (next[t.dossierId] || 0) + t.commentCount;
-            });
-            this._constellationCommentCounts = next;
-            this._constellationCountsLoading = false;
-            const mount = document.getElementById('pt-constellation-mount');
-            if (mount && JSON.stringify(next) !== JSON.stringify(cmtCounts)) {
-              mount.innerHTML = '';
-              mount.appendChild(this._buildConstellationSvg());
-            }
-          }).catch(() => { this._constellationCountsLoading = false; });
+        if (typeof PortalConstellationStage !== 'undefined') {
+          return PortalConstellationStage.renderHeroBox(this);
         }
-
-        const nodes = [
-          { id: 'cadplan_spec', docId: 'CadPlan', x: 240, y: 20, label: '📐 CadPlan', col: '#00f2fe' },
-          { id: 'curve_drawing_spear', docId: 'QuoraToys', x: 68, y: 58, label: '〰️ Curve Studio', col: '#c084fc' },
-          { id: 'luno', docId: null, x: 412, y: 58, label: '🌙 Luno Core', col: '#00f2fe' },
-          { id: 'accucad_live', docId: 'accuCad', x: 64, y: 98, label: '🚀 AccuCAD 3D', col: '#38bdf8' },
-          { id: 'economics_spear', docId: 'EconomicsOfAutomation', x: 416, y: 98, label: '🤖 Econ Essay', col: '#34d399' },
-          { id: 'career', docId: 'accudraw', x: 64, y: 140, label: '📜 Patents', col: '#60a5fa' },
-          { id: 'homesetup', docId: 'HomeSetup', x: 416, y: 140, label: '🖥️ HomeSetup', col: '#10b981' },
-          { id: 'jobs_ai', docId: 'JobsAndAI', x: 68, y: 182, label: '📈 Jobs & AI', col: '#fb923c' },
-          { id: 'comments_sys', docId: 'Comments', x: 412, y: 182, label: '💬 Comments', col: '#38bdf8' },
-          { id: 'financial', docId: 'ValuationOfAccudraw', x: 104, y: 222, label: '📊 Valuation', col: '#f59e0b' },
-          { id: 'family', docId: 'situation', x: 376, y: 222, label: '⚖️ Situation', col: '#f43f5e' },
-          { id: 'economics', docId: 'Opus', x: 240, y: 260, label: '🏛️ Master Opus', col: '#a78bfa' }
-        ];
-
-        const cx = 240, cy = 140;
-
-        svg.appendChild(makeElement('svg:ellipse', {
-          cx, cy, rx: '176', ry: '118',
-          fill: 'none', stroke: 'rgba(0, 242, 254, 0.18)', 'stroke-width': '1', 'stroke-dasharray': '3,4'
-        }));
-
-        nodes.forEach(n => {
-          const mode = n.docId ? (docModes[n.docId] || 'off') : 'off';
-          const isSel = mode !== 'off';
-          svg.appendChild(makeElement('svg:line', {
-            x1: cx, y1: cy, x2: n.x, y2: n.y,
-            stroke: n.col,
-            'stroke-width': isSel ? '2.2' : '1.2',
-            'stroke-dasharray': isSel ? 'none' : '4,3',
-            opacity: isSel ? '0.92' : '0.45'
-          }));
-        });
-
-        const centerG = makeElement('svg:g', { transform: `translate(${cx - 56}, ${cy - 19})`, className: 'pt-constellation-node' });
-        centerG.appendChild(makeElement('svg:rect', {
-          width: '112', height: '38', rx: '19', fill: '#082f49', stroke: '#00f2fe', 'stroke-width': '1.8', filter: 'url(#pt-glow)'
-        }));
-        centerG.appendChild(makeElement('svg:text', {
-          x: '56', y: '17', fill: '#00f2fe', 'font-family': 'monospace', 'font-size': '9.5', 'font-weight': 'bold', 'text-anchor': 'middle'
-        }, 'ROB • PORTAL'));
-        centerG.appendChild(makeElement('svg:text', {
-          x: '56', y: '29', fill: '#94a3b8', 'font-family': 'monospace', 'font-size': '7.5', 'text-anchor': 'middle'
-        }, 'Read Composed ▸'));
-        centerG.onclick = () => this.openComposedPage();
-        svg.appendChild(centerG);
-
-        const modeBadgeMap = { summary: 'SUM', core: 'CORE', indepth: 'FULL', custom: 'PART' };
-
-        const updateLegendFor = (n, mode) => {
-          const legend = document.getElementById('pt-constellation-legend');
-          if (!legend) return;
-          legend.innerHTML = '';
-          const modeText = mode === 'off' ? 'OFF' : (modeBadgeMap[mode] || mode.toUpperCase());
-          legend.appendChild(makeElement('span', { style: { color: n.col, fontWeight: '700' } }, `${n.label} [${modeText}]`));
-          const btns = makeElement('div', { style: { display: 'flex', gap: '5px', flexWrap: 'wrap' } });
-          if (n.docId) {
-            btns.appendChild(makeElement('button', {
-              className: 'pt-btn',
-              style: { fontSize: '9.5px', padding: '2px 7px', color: n.col, borderColor: `${n.col}66` },
-              onclick: () => this.openProjectInPlace(n.docId)
-            }, '📖 Open'));
-          }
-          const pillar = PortalData.getPillars().find(p => p.id === n.id || p.projectName === n.docId);
-          if (pillar) {
-            btns.appendChild(makeElement('button', {
-              className: 'pt-btn',
-              style: { fontSize: '9.5px', padding: '2px 7px' },
-              onclick: () => PortalModals.openPillarDialog(pillar, this)
-            }, '🔍 Details'));
-          }
-          legend.appendChild(btns);
-        };
-
-        nodes.forEach(n => {
-          const mode = n.docId ? (docModes[n.docId] || 'off') : 'off';
-          const isSel = mode !== 'off';
-          const cCount = n.docId ? (cmtCounts[n.docId] || 0) : 0;
-
-          const g = makeElement('svg:g', { transform: `translate(${n.x - 59}, ${n.y - 14})`, className: 'pt-constellation-node' });
-          g.appendChild(makeElement('svg:title', {}, `${n.label}: Click to show in Tree below • Click right pill to toggle Off / Sum / Core / Full`));
-          g.appendChild(makeElement('svg:rect', {
-            width: '118', height: '28', rx: '7',
-            fill: isSel ? '#0f2236' : '#0b101b',
-            stroke: n.col,
-            'stroke-width': isSel ? '2' : '1.1',
-            filter: isSel ? 'url(#pt-glow)' : 'none'
-          }));
-          g.appendChild(makeElement('svg:text', {
-            x: n.docId ? '46' : '59', y: '17', fill: '#f8fafc',
-            'font-family': 'monospace', 'font-size': '9.1', 'font-weight': 'bold', 'text-anchor': 'middle'
-          }, n.label));
-
-          g.onclick = () => {
-            updateLegendFor(n, mode);
-            if (n.docId && typeof PortalPromptBuilder !== 'undefined' && typeof PortalPromptBuilder.focusProject === 'function') {
-              if (catalog.some(c => c.id === n.docId)) {
-                PortalPromptBuilder.focusProject(n.docId);
-                return;
-              }
-            }
-            const pillar = PortalData.getPillars().find(p => p.id === n.id || p.projectName === n.docId);
-            if (pillar) PortalModals.openPillarDialog(pillar, this);
-          };
-
-          if (n.docId && catalog.some(c => c.id === n.docId)) {
-            const badgeTxt = modeBadgeMap[mode] || '+';
-            const pillG = makeElement('svg:g', { transform: 'translate(90, 4)', style: { cursor: 'pointer' } });
-            pillG.appendChild(makeElement('svg:title', {}, 'Click to cycle: Off → Summary → Core → Full'));
-            pillG.appendChild(makeElement('svg:rect', {
-              width: '25', height: '20', rx: '5',
-              fill: isSel ? n.col : '#162033',
-              stroke: n.col, 'stroke-width': '0.9'
-            }));
-            pillG.appendChild(makeElement('svg:text', {
-              x: '12.5', y: '13.5',
-              fill: isSel ? '#060911' : n.col,
-              'font-family': 'monospace', 'font-size': badgeTxt.length > 2 ? '6.8' : '9',
-              'font-weight': 'bold', 'text-anchor': 'middle'
-            }, badgeTxt));
-            pillG.onclick = (e) => {
-              e.stopPropagation();
-              const docObj = catalog.find(c => c.id === n.docId);
-              if (!docObj || typeof PartialDocumentEngine === 'undefined') return;
-              const order = ['off', 'summary', 'core', 'indepth'];
-              const nextMode = order[(order.indexOf(mode === 'custom' ? 'indepth' : mode) + 1) % order.length];
-              PartialDocumentEngine.setDocMode(docObj, nextMode);
-              updateLegendFor(n, nextMode);
-            };
-            g.appendChild(pillG);
-          }
-
-          if (cCount > 0) {
-            const cG = makeElement('svg:g', { transform: 'translate(-5, -7)' });
-            cG.appendChild(makeElement('svg:rect', {
-              width: '24', height: '14', rx: '7', fill: '#7c3aed', stroke: '#e9d5ff', 'stroke-width': '0.8'
-            }));
-            cG.appendChild(makeElement('svg:text', {
-              x: '12', y: '10', fill: '#ffffff', 'font-family': 'monospace', 'font-size': '7.5', 'font-weight': 'bold', 'text-anchor': 'middle'
-            }, `💬${cCount}`));
-            g.appendChild(cG);
-          }
-
-          svg.appendChild(g);
-        });
-
-        return svg;
+        return makeElement('div', { id: 'pt-hero-constellation-box' }, 'Loading Spatial Map...');
       }
   _buildKeysBanner() {
       return makeElement('section', { className: 'pt-keys-panel', 'data-block-id': 'portal_keys_banner' }, [
@@ -558,74 +319,78 @@ class Portal {
   }
 
   _buildPillarCard(p) {
-      const card = makeElement('article', {
-        className: 'pt-card',
-        'data-block-id': `pillar_${p.id}`,
-        style: {
-          borderLeft: `4px solid ${p.accent}`,
-          boxShadow: `0 10px 28px rgba(0,0,0,0.45), 0 0 18px ${p.accent}14`
-        }
-      });
+        const stats = typeof PortalConstellationStage !== 'undefined'
+          ? PortalConstellationStage.getCommentStats(p.id)
+          : { total: 0 };
 
-      const spaProj = p.projectName || null;
+        const card = makeElement('article', {
+          className: 'pt-card',
+          'data-block-id': `pillar_${p.id}`,
+          style: {
+            borderLeft: `4px solid ${p.accent}`,
+            boxShadow: `0 10px 28px rgba(0,0,0,0.45), 0 0 18px ${p.accent}14`
+          }
+        });
 
-      card.appendChild(makeElement('div', { className: 'pt-card-head' }, [
-        makeElement('div', {}, [
-          makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', fontWeight: '800', color: p.accent } }, p.badge),
-          makeElement('h3', {
-            className: 'pt-card-title',
-            style: { cursor: 'pointer' },
-            onclick: () => spaProj ? this.openProjectInPlace(spaProj) : window.open(p.url, '_blank', 'noopener,noreferrer')
-          }, `${p.icon} ${p.name}`),
-          makeElement('div', { className: 'pt-card-sub', style: { color: '#94a3b8' } }, p.subtitle)
-        ]),
-        makeElement('a', {
-          href: p.url,
-          target: '_blank',
-          rel: 'noopener noreferrer',
-          className: 'pt-btn',
-          title: 'Open in separate browser tab',
-          style: { fontSize: '10px', padding: '3px 7px' }
-        }, '↗')
-      ]));
+        card.appendChild(makeElement('div', { className: 'pt-card-head' }, [
+          makeElement('div', {}, [
+            makeElement('div', { style: { fontFamily: 'var(--pt-mono)', fontSize: '10px', fontWeight: '800', color: p.accent } }, p.badge),
+            makeElement('a', {
+              href: p.url,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              style: { textDecoration: 'none', color: 'inherit', display: 'inline-block' }
+            }, [
+              makeElement('h3', { className: 'pt-card-title', style: { cursor: 'pointer' } }, `${p.icon} ${p.name} ↗`)
+            ]),
+            makeElement('div', { className: 'pt-card-sub', style: { color: '#94a3b8' } }, p.subtitle)
+          ])
+        ]));
 
-      card.appendChild(makeElement('p', { className: 'pt-card-summary' }, p.publicSummary));
-      card.appendChild(makeElement('div', {
-        style: { fontSize: '11.5px', color: '#94a3b8', backgroundColor: '#090e19', border: '1px solid #1a2333', borderRadius: '6px', padding: '8px 10px', lineHeight: '1.45' }
-      }, p.calmNote));
+        card.appendChild(makeElement('p', { className: 'pt-card-summary' }, p.publicSummary));
+        card.appendChild(makeElement('div', {
+          style: { fontSize: '11.5px', color: '#94a3b8', backgroundColor: '#090e19', border: '1px solid #1a2333', borderRadius: '6px', padding: '8px 10px', lineHeight: '1.45' }
+        }, p.calmNote));
 
-      card.appendChild(makeElement('div', { className: 'pt-tags' },
-        p.facts.map(f => makeElement('span', { className: 'pt-tag' }, f))
-      ));
+        card.appendChild(makeElement('div', { className: 'pt-tags' },
+          p.facts.map(f => makeElement('span', { className: 'pt-tag' }, f))
+        ));
 
-      card.appendChild(makeElement('div', { className: 'pt-card-footer' }, [
-        spaProj ? makeElement('button', {
-          className: 'pt-btn',
-          style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent },
-          onclick: () => this.openProjectInPlace(spaProj)
-        }, '📖 Open In-Place') : makeElement('a', {
-          href: p.url,
-          target: '_blank',
-          rel: 'noopener noreferrer',
-          className: 'pt-btn',
-          style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent }
-        }, p.openLabel || '📄 Open ↗'),
-        makeElement('div', { style: { display: 'flex', gap: '6px' } }, [
-          makeElement('button', {
+        card.appendChild(makeElement('div', { className: 'pt-card-footer' }, [
+          makeElement('a', {
+            href: p.url,
+            target: '_blank',
+            rel: 'noopener noreferrer',
             className: 'pt-btn',
-            style: { fontSize: '11px', padding: '4px 9px' },
-            onclick: () => PortalModals.openPillarDialog(p, this)
-          }, '🔍 Details'),
-          makeElement('button', {
-            className: 'pt-btn',
-            style: { fontSize: '11px', padding: '4px 9px' },
-            onclick: () => this.openInDocumentReader(p.docPageId)
-          }, '📄 Chapter')
-        ])
-      ]));
+            style: { fontSize: '11px', padding: '5px 10px', borderColor: `${p.accent}88`, color: p.accent }
+          }, p.openLabel || '📄 Open Document ↗'),
+          makeElement('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } }, [
+            makeElement('button', {
+              className: `pt-btn ${stats.total > 0 ? 'pt-btn-emerald' : ''}`,
+              style: { fontSize: '11px', padding: '4px 9px' },
+              onclick: (e) => this.openPillarComments(p, e.currentTarget)
+            }, stats.total > 0 ? `💬 ${stats.total}` : '💬 Comment'),
+            makeElement('button', {
+              className: 'pt-btn',
+              style: { fontSize: '11px', padding: '4px 9px' },
+              onclick: () => {
+                if (typeof PortalConstellationStage !== 'undefined') {
+                  PortalConstellationStage.openExpandedStage(this, { originEl: card, initialPillarId: p.id });
+                } else {
+                  PortalModals.openPillarDialog(p, this);
+                }
+              }
+            }, '🕸️ Map & Read'),
+            makeElement('button', {
+              className: 'pt-btn',
+              style: { fontSize: '11px', padding: '4px 9px' },
+              onclick: () => this.openInDocumentReader(p.docPageId)
+            }, '📖 Chapter')
+          ])
+        ]));
 
-      return card;
-    }
+        return card;
+      }
   async openInDocumentReader(pageId = 'spear_drawing', updateUrl = true) {
       if (this.mode === 'document' && this.reader) {
         this.reader.switchPage(pageId, updateUrl);
@@ -812,16 +577,25 @@ class Portal {
     }
 
   destroy() {
-      if (this._routeSyncHandler) {
-        window.removeEventListener('hashchange', this._routeSyncHandler);
-        window.removeEventListener('popstate', this._routeSyncHandler);
-        this._routeSyncHandler = null;
+        if (typeof PortalConstellationStage !== 'undefined' && PortalConstellationStage._activeStage) {
+          PortalConstellationStage._activeStage.close(true);
+        }
+        const commentHud = document.getElementById('pt-comment-mode-hud');
+        if (commentHud) commentHud.remove();
+        if (this._routeSyncHandler) {
+          window.removeEventListener('hashchange', this._routeSyncHandler);
+          window.removeEventListener('popstate', this._routeSyncHandler);
+          this._routeSyncHandler = null;
+        }
+        this._teardownDocumentReader();
+        if (this.aardvark) {
+          this.aardvark.destroy();
+          this.aardvark = null;
+        }
+        if (globalThis._portalInstance === this) globalThis._portalInstance = null;
+        if (globalThis._cadPlanInstance === this) globalThis._cadPlanInstance = null;
+        this.rootElement = null;
       }
-      this._teardownActiveSubView();
-      if (globalThis._portalInstance === this) globalThis._portalInstance = null;
-      if (globalThis._cadPlanInstance === this) globalThis._cadPlanInstance = null;
-      this.rootElement = null;
-    }
   _buildChapterDirectory() {
         const chapters = [
           { id: 'spear_drawing', num: '1', label: 'Kinetic Curve & Markup Studio', col: '#00f2fe' },
@@ -1434,6 +1208,75 @@ class Portal {
         }
         this._teardownDocumentReader();
       }
+
+  startCommentOnAnythingMode() {
+      if (!this.aardvark) return;
+      if (typeof PortalConstellationStage !== 'undefined' && PortalConstellationStage._activeStage) {
+        PortalConstellationStage._activeStage.close(true);
+      }
+
+      const existingHud = document.getElementById('pt-comment-mode-hud');
+      if (this.aardvark.isActive) {
+        this.aardvark.deactivate();
+        this.aardvark._preferredTab = 'note';
+        existingHud?.remove();
+        return;
+      }
+
+      this.aardvark._preferredTab = 'thread';
+      this.aardvark.activate();
+      if (this.aardvark.hudElement) {
+        this.aardvark.hudElement.style.display = 'none';
+      }
+
+      existingHud?.remove();
+      const hud = makeElement('div', {
+        id: 'pt-comment-mode-hud',
+        className: 'pt-comment-mode-hud',
+        'data-aardvark-ignore': 'true'
+      }, [
+        makeElement('span', { style: { color: '#34d399', fontWeight: '800' } }, '💬 Comment on Anything:'),
+        makeElement('span', { style: { color: '#cbd5e1' } }, 'Click any card, paragraph, or button to comment • [W] Wider • [N] Narrower'),
+        makeElement('button', {
+          className: 'pt-btn',
+          style: { padding: '3px 10px', fontSize: '10.5px', color: '#f87171', borderColor: 'rgba(248,113,113,0.45)' },
+          onclick: () => {
+            this.aardvark?.deactivate();
+            if (this.aardvark) this.aardvark._preferredTab = 'note';
+            hud.remove();
+          }
+        }, '✓ Done')
+      ]);
+      document.body.appendChild(hud);
+    }
+
+  openPillarComments(pillar, triggerEl = null) {
+      if (!pillar) return;
+      if (typeof CadPlanItemNotes !== 'undefined' && typeof CadPlanItemNotes.openBlockNotesDialog === 'function') {
+        const cardEl = triggerEl?.closest('.pt-card') || triggerEl;
+        CadPlanItemNotes.openBlockNotesDialog(
+          'frontpage',
+          pillar.id,
+          { name: 'Portal', [pillar.id]: () => [pillar.publicSummary] },
+          () => {
+            window.dispatchEvent(new CustomEvent('portal-comments-updated'));
+          },
+          { options: { dossierId: 'Portal' } },
+          {
+            defaultTab: 'thread',
+            dossierId: 'Portal',
+            targetElement: cardEl,
+            locator: { key: pillar.id, textSnippet: pillar.publicSummary.slice(0, 120) }
+          }
+        );
+      } else if (typeof PortalConstellationStage !== 'undefined') {
+        PortalConstellationStage.openExpandedStage(this, {
+          originEl: triggerEl,
+          initialPillarId: pillar.id,
+          initialTab: 'comments'
+        });
+      }
+    }
 }
 
 globalThis.Portal = Portal;

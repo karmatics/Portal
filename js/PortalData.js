@@ -304,6 +304,101 @@ class PortalData {
           { id: 'personal', label: '⚖️ Financial & Family (2)' }
         ];
       }
+
+  static resolveSubPath(relPath) {
+      if (!relPath) return '#';
+      const clean = String(relPath).replace(/^\/+/, '');
+      if (typeof window !== 'undefined' && window.location) {
+        const host = window.location.hostname || '';
+        if (host.endsWith('.github.io')) {
+          const user = host.split('.')[0] || 'karmatics';
+          return `https://${user}.github.io/${clean}`;
+        }
+        if (window.location.protocol === 'about:') {
+          try {
+            const pHost = window.parent?.location?.hostname || '';
+            if (pHost.endsWith('.github.io')) {
+              return `https://${pHost.split('.')[0] || 'karmatics'}.github.io/${clean}`;
+            }
+            if (window.parent?.location?.origin && window.parent.location.origin !== 'null') {
+              return `${window.parent.location.origin}/${clean}`;
+            }
+          } catch (e) {}
+          return `https://karmatics.github.io/${clean}`;
+        }
+      }
+      return `../${clean}`;
+    }
+
+  static getSubNodes(pillarId) {
+      const u = (proj, hash = '') => PortalData.resolveAppUrl(proj, hash);
+      const sub = (rel) => PortalData.resolveSubPath(rel);
+
+      const map = {
+        family: [
+          { id: 'sit_overview', label: 'Situation Document', sub: 'Chico Nov 2026 overview', url: u('situation'), kind: 'doc' },
+          { id: 'sit_work', label: 'Current Stability', sub: 'Housing, SS & therapy', url: u('situation', '#current-work'), kind: 'doc' },
+          { id: 'sit_court', label: 'SF Custody & Support', sub: '2017 primary & San Mateo', url: u('situation', '#court-filing'), kind: 'doc' },
+          { id: 'pt_ch_family', label: 'Portal Chapter 8', sub: 'Read summary + gated layer', docPageId: 'family', kind: 'chapter' }
+        ],
+        financial: [
+          { id: 'val_main', label: 'Valuation Dossier', sub: '$1.2B–$5.54B+ counterfactual', url: u('ValuationOfAccudraw'), kind: 'doc' },
+          { id: 'opus_verify', label: 'Blind Search Proof', sub: '4-turn unprimed AI test', url: u('Opus', '#verification'), kind: 'doc' },
+          { id: 'sit_val', label: 'Personal Finances', sub: 'SS, arrears & goals', url: u('situation', '#valuation'), kind: 'doc' },
+          { id: 'blind_prompt', label: 'Copy Blind Prompt', sub: 'Test in incognito search', action: 'copy_blind', kind: 'action' }
+        ],
+        cadplan_spec: [
+          { id: 'cp_main', label: 'CadPlan Spec + 3D', sub: '13-chapter live blueprint', url: u('CadPlan'), kind: 'app' },
+          { id: 'cp_phil', label: 'AccuDraw Philosophy', sub: 'Direction cosines & locks', url: u('CadPlan', '#philosophy'), kind: 'doc' },
+          { id: 'cp_cadcraft', label: 'CADCraft Blueprint', sub: 'Rust/Wasm clone integration', url: u('CadPlan', '#cadcraft'), kind: 'doc' },
+          { id: 'cp_demos', label: 'Interactive 3D Labs', sub: 'Squircle & tentative snap', url: u('CadPlan', '#demos'), kind: 'app' }
+        ],
+        accucad_live: [
+          { id: 'ac_app', label: 'AccuCAD 3D App', sub: 'Three.js WebGL workstation', url: u('accuCad'), kind: 'app' },
+          { id: 'tc_app', label: 'TouchController P2P', sub: 'Mobile remote CAD pad', url: u('TouchController'), kind: 'app' },
+          { id: 'cp_audit', label: 'AccuCAD Code Audit', sub: 'Agent reference code', url: u('CadPlan', '#accucad'), kind: 'doc' },
+          { id: 'compass_sub', label: 'Squircle Compass Lab', sub: 'Standalone 8-arc morph', url: sub('Luno/CompassApp/index.html'), kind: 'app' }
+        ],
+        career: [
+          { id: 'ad_archive', label: '30-Year Archive', sub: 'US Patent #5,754,182', url: u('accudraw'), kind: 'doc' },
+          { id: 'ad_articles', label: '1995–96 Reprints', sub: 'MicroStation Manager', url: u('accudraw', '#articles'), kind: 'doc' },
+          { id: 'cp_origins', label: 'SmartLine Origins', sub: '48/50 State DOT standard', url: u('CadPlan', '#origins'), kind: 'doc' },
+          { id: 'pt_ch_career', label: 'Portal Chapter 6', sub: 'AccuDraw & Aardvark record', docPageId: 'career', kind: 'chapter' }
+        ],
+        luno: [
+          { id: 'luno_app', label: 'Luno Cockpit', sub: 'Outbox, Inbox & AST patcher', url: u('Luno'), kind: 'app' },
+          { id: 'luno_compass', label: 'CompassApp Lab', sub: 'Standalone 3D squircle', url: sub('Luno/CompassApp/index.html'), kind: 'app' },
+          { id: 'luno_keys', label: 'KeyCommandApp', sub: 'Single-stroke CAD keys', url: sub('Luno/KeyCommandApp/index.html'), kind: 'app' },
+          { id: 'pt_ch_luno', label: 'Portal Chapter 4', sub: 'HTML Container Protocol', docPageId: 'luno', kind: 'chapter' }
+        ],
+        homesetup: [
+          { id: 'hs_main', label: 'HomeSetup Dossier', sub: 'Workstations & drives', url: u('HomeSetup'), kind: 'doc' },
+          { id: 'hs_topo', label: 'Port 8080 Mesh', sub: 'Mac .226 ↔ Linux .245', url: u('HomeSetup', '#topology'), kind: 'doc' },
+          { id: 'hs_dict', label: 'Universal Dictation', sub: 'Voice widget & vocab rules', url: u('HomeSetup', '#dictation'), kind: 'doc' },
+          { id: 'pt_ch_hs', label: 'Portal Chapter 5', sub: 'Zero-leak secret boundary', docPageId: 'homesetup', kind: 'chapter' }
+        ],
+        economics: [
+          { id: 'opus_main', label: 'Master Opus Router', sub: '4-quadrant Tier 0–3 hub', url: u('Opus'), kind: 'doc' },
+          { id: 'opus_q1', label: 'Q1: CAD & AccuDraw', sub: 'Spatial constraints', url: u('Opus', '#q1_cad'), kind: 'doc' },
+          { id: 'opus_q3', label: 'Q3: Post-Labor Econ', sub: 'Automation & dividends', url: u('Opus', '#q3_economics'), kind: 'doc' },
+          { id: 'lib_hub', label: 'Shared Library Hub', sub: 'UITools, Reader, Dictation', url: u('Library'), kind: 'doc' }
+        ],
+        curve_drawing_spear: [
+          { id: 'qt_app', label: 'Kinetic Curve App', sub: '32px tether & Ctrl+V', url: u('QuoraToys'), kind: 'app' },
+          { id: 'qt_ann', label: 'Vector Annotations', sub: 'Callouts & arrow engine', url: u('QuoraToys', '#annotation'), kind: 'doc' },
+          { id: 'qt_studio', label: 'Image Comparator', sub: 'Spot-the-difference tool', url: u('QuoraToys', '#studio'), kind: 'app' },
+          { id: 'pt_ch_curve', label: 'Portal Chapter 1', sub: 'Modify easily via Luno', docPageId: 'spear_drawing', kind: 'chapter' }
+        ],
+        economics_spear: [
+          { id: 'econ_essay', label: 'Visual Essay & Sim', sub: 'Robot Dividend simulator', url: u('EconomicsOfAutomation'), kind: 'doc' },
+          { id: 'econ_colony', label: 'Colony of 100,000', sub: 'Core thought experiment', url: u('EconomicsOfAutomation', '#colony'), kind: 'doc' },
+          { id: 'jobs_ai', label: 'Jobs & AI Companion', sub: 'Labor transition thesis', url: u('JobsAndAI'), kind: 'doc' },
+          { id: 'pt_ch_econ', label: 'Portal Chapter 2', sub: 'Plain-English overview', docPageId: 'spear_economics', kind: 'chapter' }
+        ]
+      };
+
+      return map[pillarId] || [];
+    }
 }
 
 globalThis.PortalData = PortalData;

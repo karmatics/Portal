@@ -1,7 +1,7 @@
 {
   "name": "Portal",
-  "version": "2.0.0",
-  "description": "Single-Page Public Portal, Global Partial Document Composer, In-Place Sibling SPA Router & Comments Hub",
+  "version": "1.1.0",
+  "description": "Public Front Page, Expandable Spatial Constellation SVG, Comment-on-Anything Engine & Living Archive for Rob Brown's Projects",
   "type": "luno-web-app",
   "mainClass": "Portal",
   "entrypoint": {
@@ -12,10 +12,9 @@
   "main": [
     "js/PortalData.js",
     "js/PortalSummaryEngine.js",
-    "js/PortalContentExtractor.js",
-    "js/PortalPromptBuilder.js",
     "js/PortalDocContent.js",
     "js/PortalModals.js",
+    "js/PortalConstellationStage.js",
     "Portal.js"
   ],
   "library": [
@@ -24,14 +23,12 @@
     "GlowingTooltip.js",
     "DictationWidget.js",
     "SidePanel.js",
-    "CommunityOracle.js",
     "SupabaseCommentsAdapter.js",
     "CadPlanDataRegistry.js",
     "CadPlanItemNotes.js",
     "CadPlanDocumentEditor.js",
     "CadPlanAardvark.js",
     "SensitiveContextGate.js",
-    "PartialDocumentEngine.js",
     "DocumentReader.js"
   ],
   "styles": [
@@ -41,16 +38,10 @@
     "frontpage-core": [
       "Portal/Portal.js",
       "Portal/js/PortalData.js",
-      "Portal/js/PortalPromptBuilder.js",
-      "Portal/js/PortalContentExtractor.js",
       "Portal/js/PortalModals.js",
+      "Portal/js/PortalConstellationStage.js",
       "Portal/portal.css",
       "Portal/luno.json"
-    ],
-    "partial-engine": [
-      "Library/PartialDocumentEngine.js",
-      "Portal/js/PortalPromptBuilder.js",
-      "Portal/js/PortalContentExtractor.js"
     ],
     "summary-engine": [
       "Portal/js/PortalSummaryEngine.js",
